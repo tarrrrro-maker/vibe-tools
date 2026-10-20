@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>VolleyPlan 🏐 系隊練球菜單生成器</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- SortableJS for Touch Drag & Drop -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  <!-- html2canvas for Image Generation -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cream: '#FDFBF7',
+            ink: '#1E293B',
+            vGreen: '#4ADE80',
+            vYellow: '#FACC15',
+            vOrange: '#FB923C',
+            vBlue: '#38BDF8',
+            vPurple: '#C084FC',
+          },
+          boxShadow: {
+            'pop': '3px 3px 0px #1E293B',
+            'pop-sm': '2px 2px 0px #1E293B',
+            'pop-lg': '4px 4px 0px #1E293B',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* 點擊時下壓的卡通按鈕手感 */
+    .btn-pop:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0px #1E293B;
+    }
+    .ghost-card {
+      opacity: 0.4;
+      background-color: #FEF08A !important;
+    }
+  </style>
+</head>
+<body class="bg-cream text-ink font-sans min-h-screen pb-28 select-none">
+
+  <!-- 頂部標題區 -->
+  <header class="max-w-md mx-auto pt-6 px-4">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="text-3xl">🏐</span>
+        <h1 class="text-2xl font-black tracking-tight">VolleyPlan</h1>
+      </div>
+      <span class="bg-vYellow border-2 border-ink px-2.5 py-0.5 rounded-full text-xs font-bold shadow-pop-sm">
+        系隊隊長版
+      </span>
+    </div>
+  </header>
+
+  <!-- 主要操作容器 -->
+  <main class="max-w-md mx-auto px-4 mt-4 space-y-4">
+
+    <!-- 1. 設定控制台面板 -->
+    <section class="bg-white border-2 border-ink rounded-2xl p-4 shadow-pop">
+      <div class="grid grid-cols-2 gap-3 mb-3">
+        <div>
+          <label class="block text-xs font-black text-slate-500 mb-1">📅 練球日期</label>
+          <input type="date" id="inputDate" class="w-full bg-slate-50 border-2 border-ink rounded-xl px-2.5 py-1.5 text-sm font-bold focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-black text-slate-500 mb-1">⏰ 開始時間</label>
+          <input type="time" id="inputStartTime" value="18:00" class="w-full bg-slate-50 border-2 border-ink rounded-xl px-2.5 py-1.5 text-sm font-bold focus:outline-none">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div>
+          <label class="block text-xs font-black text-slate-500 mb-1">⏳ 預計總時長</label>
+          <select id="selectDuration" class="w-full bg-slate-50 border-2 border-ink rounded-xl px-2 py-1.5 text-sm font-bold focus:outline-none">
+            <option value="90">90 分鐘 (1.5h)</option>
+            <option value="120" selected>120 分鐘 (2h)</option>
+            <option value="150">150 分鐘 (2.5h)</option>
+            <option value="180">180 分鐘 (3h)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-black text-slate-500 mb-1">👥 出席人數</label>
+          <div class="flex items-center bg-slate-50 border-2 border-ink rounded-xl overflow-hidden">
+            <button onclick="changeHeadcount(-1)" class="w-8 py-1.5 text-base font-black hover:bg-slate-200 active:bg-slate-300">-</button>
+            <span id="labelHeadcount" class="flex-1 text-center font-black text-sm">12 人</span>
+            <button onclick="changeHeadcount(1)" class="w-8 py-1.5 text-base font-black hover:bg-slate-200 active:bg-slate-300">+</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 訓練主題膠囊選單 -->
+      <div>
+        <label class="block text-xs font-black text-slate-500 mb-2">🎯 本日訓練重點</label>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="setTheme('basic')" id="btn-theme-basic" class="theme-btn py-1.5 px-2 rounded-xl border-2 border-ink text-xs font-black bg-vGreen shadow-pop-sm btn-pop">
+            🟢 基本功扎實
+          </button>
+          <button onclick="setTheme('defense')" id="btn-theme-defense" class="theme-btn py-1.5 px-2 rounded-xl border-2 border-ink text-xs font-black bg-white shadow-pop-sm btn-pop">
+            🟠 防守特訓
+          </button>
+          <button onclick="setTheme('attack')" id="btn-theme-attack" class="theme-btn py-1.5 px-2 rounded-xl border-2 border-ink text-xs font-black bg-white shadow-pop-sm btn-pop">
+            🟡 攻擊與發接
+          </button>
+          <button onclick="setTheme('scrimmage')" id="btn-theme-scrimmage" class="theme-btn py-1.5 px-2 rounded-xl border-2 border-ink text-xs font-black bg-white shadow-pop-sm btn-pop">
+            🔵 實戰賽前 Play
+          </button>
+        </div>
+      </div>
+
+      <!-- 一鍵生成按鈕 -->
+      <button onclick="generatePlan()" class="w-full mt-4 bg-vYellow border-2 border-ink py-2.5 rounded-xl font-black text-sm shadow-pop btn-pop flex items-center justify-center gap-1.5">
+        <span>✨ 一鍵套用偏好推薦</span>
+      </button>
+    </section>
+
+    <!-- 2. 即時時間統計進度條 -->
+    <section class="bg-white border-2 border-ink rounded-2xl p-3 shadow-pop-sm">
+      <div class="flex justify-between items-center text-xs font-black mb-1.5">
+        <span class="flex items-center gap-1">⏱️ 菜單時間進度</span>
+        <span id="timeStatusText" class="text-emerald-600">已排 120 / 120 分鐘</span>
+      </div>
+      <div class="w-full h-3 bg-slate-100 border border-ink rounded-full overflow-hidden p-0.5">
+        <div id="timeProgressBar" class="h-full bg-vGreen rounded-full transition-all duration-300" style="width: 100%;"></div>
+      </div>
+    </section>
+
+    <!-- 3. 積木拖曳菜單列表 -->
+    <section class="space-y-2.5">
+      <div class="flex justify-between items-center px-1">
+        <span class="text-xs font-black text-slate-500">📋 訓練項目（長按 ⠿ 可拖曳排序）</span>
+        <span class="text-[11px] font-bold text-slate-400">點擊名稱可修改</span>
+      </div>
+
+      <div id="timelineList" class="space-y-2.5">
+        <!-- 動態渲染項目積木卡片 -->
+      </div>
+
+      <!-- 新增自訂項目按鈕 -->
+      <button onclick="addCustomItem()" class="w-full py-2.5 border-2 border-dashed border-ink bg-white/70 hover:bg-white rounded-2xl font-black text-xs text-slate-600 shadow-pop-sm btn-pop">
+        ＋ 新增訓練項目
+      </button>
+    </section>
+
+  </main>
+
+  <!-- 4. 手機底部固定操作列 -->
+  <footer class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t-2 border-ink p-3 z-30">
+    <div class="max-w-md mx-auto grid grid-cols-2 gap-3">
+      <button onclick="copyLineFormat()" class="bg-vGreen border-2 border-ink py-2.5 px-3 rounded-xl font-black text-xs shadow-pop btn-pop flex items-center justify-center gap-1">
+        <span>📋 複製 LINE 格式</span>
+      </button>
+      <button onclick="exportCardImage()" class="bg-vBlue border-2 border-ink py-2.5 px-3 rounded-xl font-black text-xs shadow-pop btn-pop flex items-center justify-center gap-1">
+        <span>🖼️ 下載菜單圖卡</span>
+      </button>
+    </div>
+  </footer>
+
+  <!-- Toast 提示組件 -->
+  <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-ink text-white text-xs font-bold px-4 py-2 rounded-full border-2 border-vYellow shadow-pop-lg transition-all duration-300 opacity-0 pointer-events-none z-50">
+    複製成功！
+  </div>
+
+  <!-- 螢幕外專門用來生成圖片的卡片 DOM（隱藏渲染） -->
+  <div id="exportCardWrapper" class="fixed -left-[9999px] top-0 w-[400px] bg-cream p-5 text-ink font-sans border-4 border-ink rounded-3xl">
+    <div class="bg-vYellow border-2 border-ink rounded-2xl p-3 shadow-pop-sm mb-4 text-center">
+      <div class="text-2xl font-black tracking-wider flex items-center justify-center gap-2">
+        <span>🏐</span> 練球菜單
+      </div>
+      <div id="cardDateHeader" class="text-xs font-black text-slate-700 mt-1">2026/10/20 (二) • 18:00 - 20:00</div>
+    </div>
+    
+    <div class="flex justify-around bg-white border-2 border-ink rounded-xl py-2 mb-4 text-xs font-black shadow-pop-sm">
+      <div id="cardThemeText">🎯 主題：基本功扎實</div>
+      <div id="cardHeadcountText">👥 出席：12 人</div>
+    </div>
+
+    <div id="cardTimelineItems" class="space-y-2">
+      <!-- 渲染卡片項目 -->
+    </div>
+
+    <div class="text-center text-[10px] font-black text-slate-400 mt-5 pt-3 border-t-2 border-dashed border-slate-300">
+      VolleyPlan • 準時到場，熱身做足！💪
+    </div>
+  </div>
+
+  <script>
+    // --- 資料與狀態管理 ---
+    let currentTheme = 'basic';
+    let headcount = 12;
+
+    // 專屬熱身五部曲 (合計 25 分鐘)
+    const warmupSuite = [
+      { id: 'w1', name: '慢跑排球場 (兩圈)', duration: 3, groupType: 'none', color: 'bg-emerald-100' },
+      { id: 'w2', name: '靜態暖身與伸展', duration: 5, groupType: 'none', color: 'bg-emerald-100' },
+      { id: 'w3', name: '動態暖身 (開合跳/側併步)', duration: 5, groupType: 'none', color: 'bg-emerald-100' },
+      { id: 'w4', name: '關節活動度 (髖胸伸展)', duration: 5, groupType: 'none', color: 'bg-emerald-100' },
+      { id: 'w5', name: '基礎球操 (指力/手腕/對空)', duration: 7, groupType: 'pair', color: 'bg-emerald-100' }
+    ];
+
+    // 主題對應的主訓練項目庫
+    const themePresets = {
+      basic: [
+        { id: 'b1', name: '兩人對打 (高手/低手/推後場)', duration: 20, groupType: 'pair', color: 'bg-yellow-100' },
+        { id: 'b2', name: '定點低手接球特訓', duration: 25, groupType: 'trio', color: 'bg-yellow-100' },
+        { id: 'b3', name: '三米線移動接球', duration: 20, groupType: 'trio', color: 'bg-yellow-100' },
+        { id: 'b4', name: '發球與自主調整', duration: 15, groupType: 'none', color: 'bg-yellow-100' },
+        { id: 'b5', name: '收操與檢討', duration: 15, groupType: 'none', color: 'bg-slate-100' }
+      ],
+      defense: [
+        { id: 'd1', name: '兩人對打與小球防守', duration: 15, groupType: 'pair', color: 'bg-orange-100' },
+        { id: 'd2', name: '三米線撲球與起球', duration: 25, groupType: 'trio', color: 'bg-orange-100' },
+        { id: 'd3', name: '扣球防守與連續起球', duration: 30, groupType: 'trio', color: 'bg-orange-100' },
+        { id: 'd4', name: '自由攻防接扣練習', duration: 15, groupType: 'trio', color: 'bg-orange-100' },
+        { id: 'd5', name: '收操與收球', duration: 10, groupType: 'none', color: 'bg-slate-100' }
+      ],
+      attack: [
+        { id: 'a1', name: '兩人對打與吊球防守', duration: 15, groupType: 'pair', color: 'bg-yellow-100' },
+        { id: 'a2', name: '發球與一傳接發到位率', duration: 30, groupType: 'trio', color: 'bg-yellow-100' },
+        { id: 'a3', name: '攻擊步與扣球練習', duration: 35, groupType: 'trio', color: 'bg-yellow-100' },
+        { id: 'a4', name: '收操與檢討', duration: 15, groupType: 'none', color: 'bg-slate-100' }
+      ],
+      scrimmage: [
+        { id: 's1', name: '兩人對打拉開距離', duration: 15, groupType: 'pair', color: 'bg-sky-100' },
+        { id: 's2', name: '接發球專注特訓', duration: 20, groupType: 'trio', color: 'bg-sky-100' },
+        { id: 's3', name: '6 vs 6 隊形模擬賽 (Play)', duration: 45, groupType: 'six', color: 'bg-sky-100' },
+        { id: 's4', name: '賽後檢討與收操', duration: 15, groupType: 'none', color: 'bg-slate-100' }
+      ]
+    };
+
+    let timelineItems = [];
+
+    // --- 初始化執行 ---
+    window.addEventListener('DOMContentLoaded', () => {
+      // 預設填入今天日期
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('inputDate').value = today;
+
+      generatePlan(); // 初次載入生成預設菜單
+
+      // 初始化拖曳排序 (SortableJS)
+      const el = document.getElementById('timelineList');
+      Sortable.create(el, {
+        handle: '.drag-handle',
+        animation: 150,
+        ghostClass: 'ghost-card',
+        onEnd: function (evt) {
+          const item = timelineItems.splice(evt.oldIndex, 1)[0];
+          timelineItems.splice(evt.newIndex, 0, item);
+          renderTimeline();
+        }
+      });
+
+      // 監聽開始時間與總長下拉變化
+      document.getElementById('inputStartTime').addEventListener('change', renderTimeline);
+      document.getElementById('selectDuration').addEventListener('change', updateTimeSummary);
+    });
+
+    // --- 核心邏輯函式 ---
+
+    function setTheme(theme) {
+      currentTheme = theme;
+      document.querySelectorAll('.theme-btn').forEach(btn => {
+        btn.classList.remove('bg-vGreen', 'bg-vOrange', 'bg-vYellow', 'bg-vBlue');
+        btn.classList.add('bg-white');
+      });
+
+      const activeBtn = document.getElementById(`btn-theme-${theme}`);
+      activeBtn.classList.remove('bg-white');
+      if (theme === 'basic') activeBtn.classList.add('bg-vGreen');
+      if (theme === 'defense') activeBtn.classList.add('bg-vOrange');
+      if (theme === 'attack') activeBtn.classList.add('bg-vYellow');
+      if (theme === 'scrimmage') activeBtn.classList.add('bg-vBlue');
+
+      generatePlan();
+    }
+
+    function changeHeadcount(delta) {
+      headcount = Math.max(2, headcount + delta);
+      document.getElementById('labelHeadcount').innerText = `${headcount} 人`;
+      renderTimeline();
+    }
+
+    function generatePlan() {
+      // 深度拷貝熱身 + 主題項目
+      timelineItems = JSON.parse(JSON.stringify([...warmupSuite, ...themePresets[currentTheme]]));
+      renderTimeline();
+    }
+
+    // 計算分組小標籤
+    function getGroupHint(type, total) {
+      if (type === 'pair') {
+        const groups = Math.floor(total / 2);
+        return total % 2 === 0 ? `分 ${groups} 組 (2人/組)` : `分 ${groups} 組 (含 1 組 3 人)`;
+      }
+      if (type === 'trio') {
+        const groups = Math.floor(total / 3);
+        const rem = total % 3;
+        return rem === 0 ? `分 ${groups} 組 (3人/組)` : `分 ${groups} 組 (含 ${rem} 組 4 人)`;
+      }
+      if (type === 'six') {
+        return total >= 12 ? `剛好分 2 隊打實戰` : `共 ${total} 人輪替對抗`;
+      }
+      return '';
+    }
+
+    // 格式化時間相加 (HH:mm + minutes)
+    function addMinutesToTime(timeStr, mins) {
+      const [h, m] = timeStr.split(':').map(Number);
+      const totalM = h * 60 + m + mins;
+      const endH = String(Math.floor((totalM / 60) % 24)).padStart(2, '0');
+      const endM = String(totalM % 60).padStart(2, '0');
+      return `${endH}:${endM}`;
+    }
+
+    // 渲染時間軸列表
+    function renderTimeline() {
+      const container = document.getElementById('timelineList');
+      container.innerHTML = '';
+
+      let currentTime = document.getElementById('inputStartTime').value || '18:00';
+
+      timelineItems.forEach((item, index) => {
+        const endTime = addMinutesToTime(currentTime, item.duration);
+        const timeRange = `${currentTime} - ${endTime}`;
+        const groupHint = getGroupHint(item.groupType, headcount);
+
+        const card = document.createElement('div');
+        card.className = `flex items-center gap-2 p-2.5 bg-white border-2 border-ink rounded-xl shadow-pop-sm transition-all`;
+        card.innerHTML = `
+          <div class="drag-handle cursor-grab active:cursor-grabbing text-slate-400 hover:text-ink px-1 text-base">⠿</div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="text-[11px] font-black px-1.5 py-0.5 rounded border border-ink ${item.color}">${timeRange}</span>
+              ${groupHint ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-vPurple/30 text-purple-900 border border-purple-800">${groupHint}</span>` : ''}
+            </div>
+            <input type="text" value="${item.name}" onchange="updateItemName(${index}, this.value)" 
+              class="w-full mt-1 text-xs font-black bg-transparent border-b border-transparent focus:border-ink focus:outline-none">
+          </div>
+          <div class="flex items-center gap-1">
+            <button onclick="adjustDuration(${index}, -5)" class="w-6 h-6 flex items-center justify-center font-black bg-slate-100 hover:bg-slate-200 border border-ink rounded-md text-xs">-</button>
+            <span class="text-xs font-black min-w-[28px] text-center">${item.duration}m</span>
+            <button onclick="adjustDuration(${index}, 5)" class="w-6 h-6 flex items-center justify-center font-black bg-slate-100 hover:bg-slate-200 border border-ink rounded-md text-xs">+</button>
+            <button onclick="removeItem(${index})" class="text-slate-400 hover:text-rose-500 font-bold ml-1 px-1">✕</button>
+          </div>
+        `;
+        container.appendChild(card);
+        currentTime = endTime;
+      });
+
+      updateTimeSummary();
+    }
+
+    function adjustDuration(index, delta) {
+      timelineItems[index].duration = Math.max(1, timelineItems[index].duration + delta);
+      renderTimeline();
+    }
+
+    function updateItemName(index, val) {
+      timelineItems[index].name = val;
+    }
+
+    function removeItem(index) {
+      timelineItems.splice(index, 1);
+      renderTimeline();
+    }
+
+    function addCustomItem() {
+      timelineItems.push({
+        id: 'c_' + Date.now(),
+        name: '自訂新練習項目',
+        duration: 15,
+        groupType: 'none',
+        color: 'bg-white'
+      });
+      renderTimeline();
+    }
+
+    // 計算總時長與進度條更新
+    function updateTimeSummary() {
+      const targetDuration = parseInt(document.getElementById('selectDuration').value);
+      const totalMinutes = timelineItems.reduce((acc, cur) => acc + cur.duration, 0);
+
+      const statusText = document.getElementById('timeStatusText');
+      const progressBar = document.getElementById('timeProgressBar');
+
+      const pct = Math.min(100, Math.round((totalMinutes / targetDuration) * 100));
+      progressBar.style.width = `${pct}%`;
+
+      if (totalMinutes === targetDuration) {
+        statusText.innerText = `已排 ${totalMinutes} / ${targetDuration} 分鐘 (剛剛好！)`;
+        statusText.className = 'text-emerald-600 font-black';
+        progressBar.className = 'h-full bg-vGreen rounded-full transition-all';
+      } else if (totalMinutes > targetDuration) {
+        statusText.innerText = `已排 ${totalMinutes} / ${targetDuration} 分鐘 (超出 ${totalMinutes - targetDuration}m)`;
+        statusText.className = 'text-vOrange font-black';
+        progressBar.className = 'h-full bg-vOrange rounded-full transition-all';
+      } else {
+        statusText.innerText = `已排 ${totalMinutes} / ${targetDuration} 分鐘 (尚餘 ${targetDuration - totalMinutes}m)`;
+        statusText.className = 'text-slate-500 font-black';
+        progressBar.className = 'h-full bg-vBlue rounded-full transition-all';
+      }
+    }
+
+    // --- 匯出功能 ---
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.innerText = msg;
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none');
+      }, 2000);
+    }
+
+    function copyLineFormat() {
+      const dateVal = document.getElementById('inputDate').value;
+      const startTime = document.getElementById('inputStartTime').value;
+      const totalDuration = timelineItems.reduce((acc, cur) => acc + cur.duration, 0);
+      const endTime = addMinutesToTime(startTime, totalDuration);
+
+      const themeNames = {
+        basic: '基本功扎實',
+        defense: '防守接扣特訓',
+        attack: '攻擊與發接發',
+        scrimmage: '實戰賽前 Play'
+      };
+
+      let text = `【🏐 今日練球菜單】\n`;
+      text += `📅 日期：${dateVal}\n`;
+      text += `⏰ 時間：${startTime} - ${endTime} (${totalDuration} min)\n`;
+      text += `👥 出席：${headcount} 人\n`;
+      text += `🎯 主題：${themeNames[currentTheme]}\n\n`;
+      text += `📋 流程規劃：\n`;
+
+      let cur = startTime;
+      timelineItems.forEach(item => {
+        const next = addMinutesToTime(cur, item.duration);
+        const groupHint = getGroupHint(item.groupType, headcount);
+        text += `${cur} - ${next} (${item.duration}m) ${item.name}${groupHint ? ` [${groupHint}]` : ''}\n`;
+        cur = next;
+      });
+
+      text += `\n請大家準時到場，熱身做足！💪`;
+
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('已複製 LINE 格式文字！🏐');
+      }).catch(() => {
+        showToast('複製失敗，請手動選取');
+      });
+    }
+
+    function exportCardImage() {
+      showToast('正在產生卡片圖片...⏳');
+
+      const dateVal = document.getElementById('inputDate').value;
+      const startTime = document.getElementById('inputStartTime').value;
+      const totalDuration = timelineItems.reduce((acc, cur) => acc + cur.duration, 0);
+      const endTime = addMinutesToTime(startTime, totalDuration);
+
+      const themeNames = {
+        basic: '基本功扎實',
+        defense: '防守接扣特訓',
+        attack: '攻擊與發接發',
+        scrimmage: '賽前實戰 Play'
+      };
+
+      // 填入卡片資訊
+      document.getElementById('cardDateHeader').innerText = `${dateVal} • ${startTime} - ${endTime} (${totalDuration}m)`;
+      document.getElementById('cardThemeText').innerText = `🎯 主題：${themeNames[currentTheme]}`;
+      document.getElementById('cardHeadcountText').innerText = `👥 出席：${headcount} 人`;
+
+      const cardItemsContainer = document.getElementById('cardTimelineItems');
+      cardItemsContainer.innerHTML = '';
+
+      let cur = startTime;
+      timelineItems.forEach(item => {
+        const next = addMinutesToTime(cur, item.duration);
+        const groupHint = getGroupHint(item.groupType, headcount);
+
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between bg-white border border-ink p-2 rounded-xl text-xs font-bold';
+        row.innerHTML = `
+          <div class="flex items-center gap-1.5">
+            <span class="text-[10px] font-black px-1 rounded bg-slate-100 border border-slate-400">${cur}</span>
+            <span>${item.name}</span>
+          </div>
+          <div class="flex items-center gap-1">
+            ${groupHint ? `<span class="text-[9px] bg-purple-100 text-purple-900 border border-purple-300 px-1 rounded">${groupHint}</span>` : ''}
+            <span class="text-[10px] text-slate-500 font-black">${item.duration}m</span>
+          </div>
+        `;
+        cardItemsContainer.appendChild(row);
+        cur = next;
+      });
+
+      const element = document.getElementById('exportCardWrapper');
+
+      html2canvas(element, {
+        scale: 2, // 雙倍超高解析度
+        backgroundColor: '#FDFBF7'
+      }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `練球菜單_${dateVal}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        showToast('圖片已下載完成！🖼️');
+      });
+    }
+  </script>
+</body>
+</html>
