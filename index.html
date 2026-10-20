@@ -34,7 +34,6 @@
     }
   </script>
   <style>
-    /* 點擊時下壓的卡通按鈕手感 */
     .btn-pop:active {
       transform: translate(2px, 2px);
       box-shadow: 1px 1px 0px #1E293B;
@@ -43,20 +42,28 @@
       opacity: 0.4;
       background-color: #FEF08A !important;
     }
+    /* 隱藏滾動條但保持滾動 */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
   </style>
 </head>
-<body class="bg-cream text-ink font-sans min-h-screen pb-28 select-none">
+<body class="bg-cream text-ink font-sans min-h-screen pb-32 select-none">
 
-  <!-- 頂部標題區 -->
+  <!-- 頂部標題與庫入口 -->
   <header class="max-w-md mx-auto pt-6 px-4">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-2">
         <span class="text-3xl">🏐</span>
         <h1 class="text-2xl font-black tracking-tight">VolleyPlan</h1>
       </div>
-      <span class="bg-vYellow border-2 border-ink px-2.5 py-0.5 rounded-full text-xs font-bold shadow-pop-sm">
-        系隊隊長版
-      </span>
+      <button onclick="openLibraryModal()" class="bg-vPurple/30 border-2 border-ink px-3 py-1.5 rounded-xl text-xs font-black shadow-pop-sm btn-pop flex items-center gap-1">
+        <span>📚 訓練菜單庫</span>
+      </button>
     </div>
   </header>
 
@@ -98,7 +105,7 @@
 
       <!-- 訓練主題膠囊選單 -->
       <div>
-        <label class="block text-xs font-black text-slate-500 mb-2">🎯 本日訓練重點</label>
+        <label class="block text-xs font-black text-slate-500 mb-2">🎯 快速套用範本（可覆蓋目前排程）</label>
         <div class="grid grid-cols-2 gap-2">
           <button onclick="setTheme('basic')" id="btn-theme-basic" class="theme-btn py-1.5 px-2 rounded-xl border-2 border-ink text-xs font-black bg-vGreen shadow-pop-sm btn-pop">
             🟢 基本功扎實
@@ -115,16 +122,15 @@
         </div>
       </div>
 
-      <!-- 一鍵生成按鈕 -->
       <button onclick="generatePlan()" class="w-full mt-4 bg-vYellow border-2 border-ink py-2.5 rounded-xl font-black text-sm shadow-pop btn-pop flex items-center justify-center gap-1.5">
-        <span>✨ 一鍵套用偏好推薦</span>
+        <span>✨ 依選擇主題生成菜單</span>
       </button>
     </section>
 
     <!-- 2. 即時時間統計進度條 -->
     <section class="bg-white border-2 border-ink rounded-2xl p-3 shadow-pop-sm">
       <div class="flex justify-between items-center text-xs font-black mb-1.5">
-        <span class="flex items-center gap-1">⏱️ 菜單時間進度</span>
+        <span class="flex items-center gap-1">⏱️ 今日菜單時間進度</span>
         <span id="timeStatusText" class="text-emerald-600">已排 120 / 120 分鐘</span>
       </div>
       <div class="w-full h-3 bg-slate-100 border border-ink rounded-full overflow-hidden p-0.5">
@@ -132,27 +138,33 @@
       </div>
     </section>
 
-    <!-- 3. 積木拖曳菜單列表 -->
+    <!-- 3. 今日菜單列表 (積木) -->
     <section class="space-y-2.5">
       <div class="flex justify-between items-center px-1">
-        <span class="text-xs font-black text-slate-500">📋 訓練項目（長按 ⠿ 可拖曳排序）</span>
-        <span class="text-[11px] font-bold text-slate-400">點擊名稱可修改</span>
+        <span class="text-xs font-black text-slate-500">📋 今日排程（長按 ⠿ 拖曳排序）</span>
+        <button onclick="openLibraryModal()" class="text-xs font-black text-indigo-600 hover:underline">
+          ＋ 從菜單庫加選
+        </button>
       </div>
 
       <div id="timelineList" class="space-y-2.5">
-        <!-- 動態渲染項目積木卡片 -->
+        <!-- 動態渲染卡片 -->
       </div>
 
-      <!-- 新增自訂項目按鈕 -->
-      <button onclick="addCustomItem()" class="w-full py-2.5 border-2 border-dashed border-ink bg-white/70 hover:bg-white rounded-2xl font-black text-xs text-slate-600 shadow-pop-sm btn-pop">
-        ＋ 新增訓練項目
-      </button>
+      <div class="grid grid-cols-2 gap-2 pt-1">
+        <button onclick="openLibraryModal()" class="w-full py-2.5 border-2 border-dashed border-ink bg-white/70 hover:bg-white rounded-2xl font-black text-xs text-slate-700 shadow-pop-sm btn-pop">
+          📚 從菜單庫挑選
+        </button>
+        <button onclick="openEditDrillModal(null)" class="w-full py-2.5 border-2 border-dashed border-ink bg-vYellow/40 hover:bg-vYellow/60 rounded-2xl font-black text-xs text-slate-700 shadow-pop-sm btn-pop">
+          ✏️ 建立新自訂項目
+        </button>
+      </div>
     </section>
 
   </main>
 
   <!-- 4. 手機底部固定操作列 -->
-  <footer class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t-2 border-ink p-3 z-30">
+  <footer class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t-2 border-ink p-3 z-20">
     <div class="max-w-md mx-auto grid grid-cols-2 gap-3">
       <button onclick="copyLineFormat()" class="bg-vGreen border-2 border-ink py-2.5 px-3 rounded-xl font-black text-xs shadow-pop btn-pop flex items-center justify-center gap-1">
         <span>📋 複製 LINE 格式</span>
@@ -163,28 +175,151 @@
     </div>
   </footer>
 
-  <!-- Toast 提示組件 -->
-  <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-ink text-white text-xs font-bold px-4 py-2 rounded-full border-2 border-vYellow shadow-pop-lg transition-all duration-300 opacity-0 pointer-events-none z-50">
-    複製成功！
+  <!-- ==================== 彈窗 A：完整菜單庫與管理 ==================== -->
+  <div id="libraryModal" class="fixed inset-0 bg-ink/50 backdrop-blur-sm z-40 hidden flex items-end sm:items-center justify-center">
+    <div class="bg-cream border-t-4 sm:border-4 border-ink rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[85vh] flex flex-col shadow-pop-lg overflow-hidden">
+      <!-- 標題 -->
+      <div class="p-4 bg-white border-b-2 border-ink flex justify-between items-center">
+        <div>
+          <h2 class="text-lg font-black flex items-center gap-1.5"><span>📚</span> 訓練項目菜單庫</h2>
+          <p class="text-[11px] font-bold text-slate-500">點擊加號直接加入今日菜單，點項目看操作說明</p>
+        </div>
+        <button onclick="closeLibraryModal()" class="w-8 h-8 rounded-full bg-slate-100 border-2 border-ink font-black text-sm flex items-center justify-center btn-pop">✕</button>
+      </div>
+
+      <!-- 分類標籤滑動列 -->
+      <div class="flex gap-1.5 p-3 overflow-x-auto no-scrollbar bg-slate-50 border-b-2 border-ink">
+        <button onclick="filterLibrary('all')" class="lib-tab active-tab px-3 py-1 rounded-xl text-xs font-black border-2 border-ink bg-vYellow shadow-pop-sm whitespace-nowrap btn-pop">全部</button>
+        <button onclick="filterLibrary('warmup')" class="lib-tab px-3 py-1 rounded-xl text-xs font-black border-2 border-ink bg-white shadow-pop-sm whitespace-nowrap btn-pop">熱身組曲</button>
+        <button onclick="filterLibrary('basic')" class="lib-tab px-3 py-1 rounded-xl text-xs font-black border-2 border-ink bg-white shadow-pop-sm whitespace-nowrap btn-pop">基本功</button>
+        <button onclick="filterLibrary('defense')" class="lib-tab px-3 py-1 rounded-xl text-xs font-black border-2 border-ink bg-white shadow-pop-sm whitespace-nowrap btn-pop">防守接扣</button>
+        <button onclick="filterLibrary('attack')" class="lib-tab px-3 py-1 rounded-xl text-xs font-black border-2 border-ink bg-white shadow-pop-sm whitespace-nowrap btn-pop">攻擊發接</button>
+        <button onclick="filterLibrary('scrimmage')" class="lib-tab px-3 py-1 rounded-xl text-xs font-black border-2 border-ink bg-white shadow-pop-sm whitespace-nowrap btn-pop">實戰 Play</button>
+        <button onclick="filterLibrary('custom')" class="lib-tab px-3 py-1 rounded-xl text-xs font-black border-2 border-ink bg-white shadow-pop-sm whitespace-nowrap btn-pop">我的自訂</button>
+      </div>
+
+      <!-- 菜單庫清單 -->
+      <div id="libraryList" class="p-4 overflow-y-auto space-y-2.5 flex-1">
+        <!-- JS 動態插入 -->
+      </div>
+
+      <!-- 底部新增按鈕 -->
+      <div class="p-3 bg-white border-t-2 border-ink">
+        <button onclick="openEditDrillModal(null)" class="w-full bg-vGreen border-2 border-ink py-2 rounded-xl font-black text-xs shadow-pop-sm btn-pop">
+          ＋ 建立全新自訂項目到庫中
+        </button>
+      </div>
+    </div>
   </div>
 
-  <!-- 螢幕外專門用來生成圖片的卡片 DOM（隱藏渲染） -->
+  <!-- ==================== 彈窗 B：項目詳細說明與操作要領 ==================== -->
+  <div id="drillDetailModal" class="fixed inset-0 bg-ink/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white border-4 border-ink rounded-3xl w-full max-w-sm p-5 shadow-pop-lg relative max-h-[80vh] flex flex-col">
+      <div class="flex justify-between items-start mb-3">
+        <div>
+          <span id="detailCategoryBadge" class="text-[10px] font-black px-2 py-0.5 rounded-full border border-ink bg-vYellow">分類</span>
+          <h3 id="detailTitle" class="text-lg font-black mt-1">訓練名稱</h3>
+        </div>
+        <button onclick="closeDrillDetailModal()" class="w-7 h-7 rounded-full bg-slate-100 border-2 border-ink font-black text-xs flex items-center justify-center btn-pop">✕</button>
+      </div>
+
+      <div class="space-y-3 overflow-y-auto flex-1 pr-1">
+        <div class="bg-slate-50 border-2 border-ink rounded-xl p-3 text-xs font-bold space-y-1">
+          <div class="text-slate-500">預設時長：<span id="detailDuration" class="text-ink font-black">20 分鐘</span></div>
+          <div class="text-slate-500">分組模式：<span id="detailGroupType" class="text-ink font-black">兩人一組</span></div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-black text-slate-500 mb-1">📖 操作規則與教學細節：</label>
+          <div id="detailDescription" class="text-xs font-medium leading-relaxed bg-cream p-3 rounded-xl border-2 border-ink whitespace-pre-line text-slate-700">
+            說明內容...
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4 pt-3 border-t-2 border-ink flex gap-2">
+        <button id="btnEditFromDetail" class="flex-1 bg-slate-100 border-2 border-ink py-2 rounded-xl font-black text-xs shadow-pop-sm btn-pop">
+          ✏️ 編輯修改此項目
+        </button>
+        <button id="btnAddFromDetail" class="flex-1 bg-vYellow border-2 border-ink py-2 rounded-xl font-black text-xs shadow-pop-sm btn-pop">
+          ＋ 加入今日菜單
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 彈窗 C：新增/編輯菜單庫項目 ==================== -->
+  <div id="editDrillModal" class="fixed inset-0 bg-ink/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white border-4 border-ink rounded-3xl w-full max-w-sm p-5 shadow-pop-lg">
+      <h3 id="editModalHeader" class="text-base font-black mb-3">✏️ 編輯訓練項目</h3>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-black text-slate-500 mb-1">項目名稱</label>
+          <input type="text" id="editDrillName" placeholder="例如：三人網前小球撲救" class="w-full bg-slate-50 border-2 border-ink rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-black text-slate-500 mb-1">所屬分類</label>
+            <select id="editDrillCategory" class="w-full bg-slate-50 border-2 border-ink rounded-xl px-2 py-1.5 text-xs font-bold focus:outline-none">
+              <option value="warmup">熱身組曲</option>
+              <option value="basic">基本功</option>
+              <option value="defense">防守接扣</option>
+              <option value="attack">攻擊發接</option>
+              <option value="scrimmage">實戰 Play</option>
+              <option value="custom">自訂項目</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-black text-slate-500 mb-1">預設時長 (分)</label>
+            <input type="number" id="editDrillDuration" value="15" min="1" max="180" class="w-full bg-slate-50 border-2 border-ink rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-black text-slate-500 mb-1">自動分組提示</label>
+          <select id="editDrillGroupType" class="w-full bg-slate-50 border-2 border-ink rounded-xl px-2 py-1.5 text-xs font-bold focus:outline-none">
+            <option value="none">不需分組 / 全員一起</option>
+            <option value="pair">兩人一組 (例如對打)</option>
+            <option value="trio">三人一組 (例如三角防守)</option>
+            <option value="six">6 vs 6 隊形</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-black text-slate-500 mb-1">操作詳細說明 / 要領備註</label>
+          <textarea id="editDrillDescription" rows="4" placeholder="寫下跑位方式、接球要點或練習要求..." class="w-full bg-slate-50 border-2 border-ink rounded-xl p-2.5 text-xs font-medium focus:outline-none"></textarea>
+        </div>
+      </div>
+
+      <div class="mt-4 pt-3 border-t-2 border-ink flex justify-end gap-2">
+        <button onclick="closeEditDrillModal()" class="px-3 py-1.5 border-2 border-ink rounded-xl font-black text-xs bg-slate-100 btn-pop">取消</button>
+        <button onclick="saveDrillItem()" class="px-4 py-1.5 border-2 border-ink rounded-xl font-black text-xs bg-vGreen shadow-pop-sm btn-pop">儲存此項目</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast 提示 -->
+  <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-ink text-white text-xs font-bold px-4 py-2 rounded-full border-2 border-vYellow shadow-pop-lg transition-all duration-300 opacity-0 pointer-events-none z-50">
+    提示訊息
+  </div>
+
+  <!-- 螢幕外專案卡片繪圖 DOM (html2canvas) -->
   <div id="exportCardWrapper" class="fixed -left-[9999px] top-0 w-[400px] bg-cream p-5 text-ink font-sans border-4 border-ink rounded-3xl">
     <div class="bg-vYellow border-2 border-ink rounded-2xl p-3 shadow-pop-sm mb-4 text-center">
       <div class="text-2xl font-black tracking-wider flex items-center justify-center gap-2">
         <span>🏐</span> 練球菜單
       </div>
-      <div id="cardDateHeader" class="text-xs font-black text-slate-700 mt-1">2026/10/20 (二) • 18:00 - 20:00</div>
+      <div id="cardDateHeader" class="text-xs font-black text-slate-700 mt-1">2026/10/20 • 18:00 - 20:00</div>
     </div>
     
     <div class="flex justify-around bg-white border-2 border-ink rounded-xl py-2 mb-4 text-xs font-black shadow-pop-sm">
-      <div id="cardThemeText">🎯 主題：基本功扎實</div>
+      <div id="cardThemeText">🎯 主題：綜合練球</div>
       <div id="cardHeadcountText">👥 出席：12 人</div>
     </div>
 
-    <div id="cardTimelineItems" class="space-y-2">
-      <!-- 渲染卡片項目 -->
-    </div>
+    <div id="cardTimelineItems" class="space-y-2"></div>
 
     <div class="text-center text-[10px] font-black text-slate-400 mt-5 pt-3 border-t-2 border-dashed border-slate-300">
       VolleyPlan • 準時到場，熱身做足！💪
@@ -192,60 +327,92 @@
   </div>
 
   <script>
-    // --- 資料與狀態管理 ---
-    let currentTheme = 'basic';
-    let headcount = 12;
+    // --- 預設訓練項目資料庫 (含詳細操作說明) ---
+    const DEFAULT_DRILL_DATABASE = [
+      // 熱身組曲
+      { id: 'w1', category: 'warmup', name: '慢跑排球場 (兩圈)', duration: 3, groupType: 'none', color: 'bg-emerald-100',
+        desc: '繞排球場邊線慢跑兩圈，第一圈正跑提升心率，第二圈可搭配小跳步側併步。' },
+      { id: 'w2', category: 'warmup', name: '靜態暖身與伸展', duration: 5, groupType: 'none', color: 'bg-emerald-100',
+        desc: '重點拉伸小腿後肌、大腿前後側與肩關節。每組動作維持 15-20 秒。' },
+      { id: 'w3', category: 'warmup', name: '動態暖身 (開合跳/側併步)', duration: 5, groupType: 'none', color: 'bg-emerald-100',
+        desc: '高抬腿、踢臀跑、側向滑步、交叉步與前後碎步，啟動神經肌肉反應。' },
+      { id: 'w4', category: 'warmup', name: '關節活動度 (髖胸伸展)', duration: 5, groupType: 'none', color: 'bg-emerald-100',
+        desc: '弓箭步轉體胸椎伸展、鴿式開髖、下犬式，確保起跳與撲救時關節活動不受限。' },
+      { id: 'w5', category: 'warmup', name: '基礎球操 (指力/手腕/對空)', duration: 7, groupType: 'pair', color: 'bg-emerald-100',
+        desc: '指尖快速彈球、頭頂對空小自墊、背向拋接球，喚醒手指球感與手腕發力。' },
 
-    // 專屬熱身五部曲 (合計 25 分鐘)
-    const warmupSuite = [
-      { id: 'w1', name: '慢跑排球場 (兩圈)', duration: 3, groupType: 'none', color: 'bg-emerald-100' },
-      { id: 'w2', name: '靜態暖身與伸展', duration: 5, groupType: 'none', color: 'bg-emerald-100' },
-      { id: 'w3', name: '動態暖身 (開合跳/側併步)', duration: 5, groupType: 'none', color: 'bg-emerald-100' },
-      { id: 'w4', name: '關節活動度 (髖胸伸展)', duration: 5, groupType: 'none', color: 'bg-emerald-100' },
-      { id: 'w5', name: '基礎球操 (指力/手腕/對空)', duration: 7, groupType: 'pair', color: 'bg-emerald-100' }
+      // 基本功
+      { id: 'b1', category: 'basic', name: '兩人對打 (高手/低手/後場推球)', duration: 20, groupType: 'pair', color: 'bg-yellow-100',
+        desc: '兩人相距 5-6 米，依序完成：連續低手 50 顆、連續高手 50 顆、一高一低組合對打。要求弧度穩定，腳步先到位再擊球。' },
+      { id: 'b2', category: 'basic', name: '定點低手接球特訓', duration: 25, groupType: 'trio', color: 'bg-yellow-100',
+        desc: '一人拋球/扣球，一人在六號位接球送回二傳位，一人負責接應裝球。每人連續接 15 顆好球後輪轉。重點在壓低重心、手臂夾緊插到球下方。' },
+      { id: 'b3', category: 'basic', name: '三米線移動接球', duration: 20, groupType: 'trio', color: 'bg-yellow-100',
+        desc: '接球者從底線衝刺觸摸三米線後後退接後場高球，練習前後移動步法的重心轉換。' },
+      { id: 'b4', category: 'basic', name: '發球與自主調整', duration: 15, groupType: 'none', color: 'bg-yellow-100',
+        desc: '指定落點發球（發向 1 號位、5 號位深角或前區短球）。每人連續發 10 顆，記錄到位率。' },
+      { id: 'b5', category: 'basic', name: '收操與檢討', duration: 15, groupType: 'none', color: 'bg-slate-100',
+        desc: '全隊圍圈收操拉筋，隊長與各幹部總結今日練習狀況、交代下次行程。' },
+
+      // 防守接扣
+      { id: 'd1', category: 'defense', name: '兩人對打與小球防守', duration: 15, groupType: 'pair', color: 'bg-orange-100',
+        desc: '一人隨機輕扣或吊短球，另一人迅速上前防守起球，強化近身小球判斷與單手補救能力。' },
+      { id: 'd2', category: 'defense', name: '三米線撲球與起球', duration: 25, groupType: 'trio', color: 'bg-orange-100',
+        desc: '教練或學長姐在網上大力拋/砸球至左右兩側，防守隊員側撲起球後快速翻身站起接第二球。' },
+      { id: 'd3', category: 'defense', name: '扣球防守與連續起球', duration: 30, groupType: 'trio', color: 'bg-orange-100',
+        desc: '攻擊手在四號位固定重扣，後場防守者在五號位防直線與斜線扣球，球需防起至場地中央高處。' },
+      { id: 'd4', category: 'defense', name: '自由攻防接扣練習', duration: 15, groupType: 'trio', color: 'bg-orange-100',
+        desc: '模擬防守反擊（Dig & Transition），防守起球後迅速過網或打過網，不追求得分，追求連續來回球。' },
+
+      // 攻擊與發接
+      { id: 'a1', category: 'attack', name: '兩人對打與網前吊球', duration: 15, groupType: 'pair', color: 'bg-yellow-100',
+        desc: '結合後場擊球與網前快節奏推撥，提升手指手腕控球角度。' },
+      { id: 'a2', category: 'attack', name: '發球與一傳接發到位率', duration: 30, groupType: 'trio', color: 'bg-yellow-100',
+        desc: '對面三人發強勁跳飄球或上手球，接發端組三人一傳體系，練習呼應喊聲與交代中間責任區。' },
+      { id: 'a3', category: 'attack', name: '攻擊步與扣球練習', duration: 35, groupType: 'trio', color: 'bg-yellow-100',
+        desc: '二傳手固定送出四號位、二號位高球與快球，攻擊手練習三步助跑起跳、空中轉體甩臂擊球。' },
+
+      // 實戰 Play
+      { id: 's1', category: 'scrimmage', name: '6 vs 6 隊形模擬賽 (Play)', duration: 45, groupType: 'six', color: 'bg-sky-100',
+        desc: '分 A、B 兩隊進行模擬比賽（每局 25 分制），重點演練發球後攔網與防守反擊站位。' }
     ];
 
-    // 主題對應的主訓練項目庫
-    const themePresets = {
-      basic: [
-        { id: 'b1', name: '兩人對打 (高手/低手/推後場)', duration: 20, groupType: 'pair', color: 'bg-yellow-100' },
-        { id: 'b2', name: '定點低手接球特訓', duration: 25, groupType: 'trio', color: 'bg-yellow-100' },
-        { id: 'b3', name: '三米線移動接球', duration: 20, groupType: 'trio', color: 'bg-yellow-100' },
-        { id: 'b4', name: '發球與自主調整', duration: 15, groupType: 'none', color: 'bg-yellow-100' },
-        { id: 'b5', name: '收操與檢討', duration: 15, groupType: 'none', color: 'bg-slate-100' }
-      ],
-      defense: [
-        { id: 'd1', name: '兩人對打與小球防守', duration: 15, groupType: 'pair', color: 'bg-orange-100' },
-        { id: 'd2', name: '三米線撲球與起球', duration: 25, groupType: 'trio', color: 'bg-orange-100' },
-        { id: 'd3', name: '扣球防守與連續起球', duration: 30, groupType: 'trio', color: 'bg-orange-100' },
-        { id: 'd4', name: '自由攻防接扣練習', duration: 15, groupType: 'trio', color: 'bg-orange-100' },
-        { id: 'd5', name: '收操與收球', duration: 10, groupType: 'none', color: 'bg-slate-100' }
-      ],
-      attack: [
-        { id: 'a1', name: '兩人對打與吊球防守', duration: 15, groupType: 'pair', color: 'bg-yellow-100' },
-        { id: 'a2', name: '發球與一傳接發到位率', duration: 30, groupType: 'trio', color: 'bg-yellow-100' },
-        { id: 'a3', name: '攻擊步與扣球練習', duration: 35, groupType: 'trio', color: 'bg-yellow-100' },
-        { id: 'a4', name: '收操與檢討', duration: 15, groupType: 'none', color: 'bg-slate-100' }
-      ],
-      scrimmage: [
-        { id: 's1', name: '兩人對打拉開距離', duration: 15, groupType: 'pair', color: 'bg-sky-100' },
-        { id: 's2', name: '接發球專注特訓', duration: 20, groupType: 'trio', color: 'bg-sky-100' },
-        { id: 's3', name: '6 vs 6 隊形模擬賽 (Play)', duration: 45, groupType: 'six', color: 'bg-sky-100' },
-        { id: 's4', name: '賽後檢討與收操', duration: 15, groupType: 'none', color: 'bg-slate-100' }
-      ]
-    };
-
+    // --- 應用程式狀態 ---
+    let drillDatabase = [];
     let timelineItems = [];
+    let currentTheme = 'basic';
+    let headcount = 12;
+    let editingDrillId = null; // 當前正在編輯的項目 ID
 
-    // --- 初始化執行 ---
+    // --- 本地儲存 (LocalStorage) 管理 ---
+    function loadDatabase() {
+      const stored = localStorage.getItem('volleyplan_drill_db');
+      if (stored) {
+        try {
+          drillDatabase = JSON.parse(stored);
+        } catch (e) {
+          drillDatabase = DEFAULT_DRILL_DATABASE;
+        }
+      } else {
+        drillDatabase = DEFAULT_DRILL_DATABASE;
+        saveDatabase();
+      }
+    }
+
+    function saveDatabase() {
+      localStorage.setItem('volleyplan_drill_db', JSON.stringify(drillDatabase));
+    }
+
+    // --- 生命週期初始化 ---
     window.addEventListener('DOMContentLoaded', () => {
-      // 預設填入今天日期
+      loadDatabase();
+
+      // 設定預設日期
       const today = new Date().toISOString().split('T')[0];
       document.getElementById('inputDate').value = today;
 
-      generatePlan(); // 初次載入生成預設菜單
+      generatePlan(); // 生成初始菜單
 
-      // 初始化拖曳排序 (SortableJS)
+      // 初始化拖曳
       const el = document.getElementById('timelineList');
       Sortable.create(el, {
         handle: '.drag-handle',
@@ -258,12 +425,30 @@
         }
       });
 
-      // 監聽開始時間與總長下拉變化
       document.getElementById('inputStartTime').addEventListener('change', renderTimeline);
       document.getElementById('selectDuration').addEventListener('change', updateTimeSummary);
     });
 
-    // --- 核心邏輯函式 ---
+    // --- 範本生成邏輯 ---
+    function generatePlan() {
+      // 依分類抓出熱身與特定主題
+      const warmups = drillDatabase.filter(d => d.category === 'warmup');
+      let primaries = [];
+
+      if (currentTheme === 'basic') {
+        primaries = drillDatabase.filter(d => ['b1', 'b2', 'b3', 'b4', 'b5'].includes(d.id));
+      } else if (currentTheme === 'defense') {
+        primaries = drillDatabase.filter(d => ['d1', 'd2', 'd3', 'd4', 'b5'].includes(d.id));
+      } else if (currentTheme === 'attack') {
+        primaries = drillDatabase.filter(d => ['a1', 'a2', 'a3', 'b4', 'b5'].includes(d.id));
+      } else if (currentTheme === 'scrimmage') {
+        primaries = drillDatabase.filter(d => ['b1', 'a2', 's1', 'b5'].includes(d.id));
+      }
+
+      // 複製一份進今日 timeline
+      timelineItems = JSON.parse(JSON.stringify([...warmups, ...primaries]));
+      renderTimeline();
+    }
 
     function setTheme(theme) {
       currentTheme = theme;
@@ -288,13 +473,7 @@
       renderTimeline();
     }
 
-    function generatePlan() {
-      // 深度拷貝熱身 + 主題項目
-      timelineItems = JSON.parse(JSON.stringify([...warmupSuite, ...themePresets[currentTheme]]));
-      renderTimeline();
-    }
-
-    // 計算分組小標籤
+    // 計算分組提示文字
     function getGroupHint(type, total) {
       if (type === 'pair') {
         const groups = Math.floor(total / 2);
@@ -311,7 +490,6 @@
       return '';
     }
 
-    // 格式化時間相加 (HH:mm + minutes)
     function addMinutesToTime(timeStr, mins) {
       const [h, m] = timeStr.split(':').map(Number);
       const totalM = h * 60 + m + mins;
@@ -320,7 +498,7 @@
       return `${endH}:${endM}`;
     }
 
-    // 渲染時間軸列表
+    // --- 渲染今日排程 ---
     function renderTimeline() {
       const container = document.getElementById('timelineList');
       container.innerHTML = '';
@@ -338,8 +516,9 @@
           <div class="drag-handle cursor-grab active:cursor-grabbing text-slate-400 hover:text-ink px-1 text-base">⠿</div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-1.5 flex-wrap">
-              <span class="text-[11px] font-black px-1.5 py-0.5 rounded border border-ink ${item.color}">${timeRange}</span>
+              <span class="text-[11px] font-black px-1.5 py-0.5 rounded border border-ink ${item.color || 'bg-slate-100'}">${timeRange}</span>
               ${groupHint ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-vPurple/30 text-purple-900 border border-purple-800">${groupHint}</span>` : ''}
+              <button onclick="viewDrillDetails('${item.id}', true)" class="text-[10px] font-black text-indigo-600 hover:underline">📖 說明</button>
             </div>
             <input type="text" value="${item.name}" onchange="updateItemName(${index}, this.value)" 
               class="w-full mt-1 text-xs font-black bg-transparent border-b border-transparent focus:border-ink focus:outline-none">
@@ -348,7 +527,7 @@
             <button onclick="adjustDuration(${index}, -5)" class="w-6 h-6 flex items-center justify-center font-black bg-slate-100 hover:bg-slate-200 border border-ink rounded-md text-xs">-</button>
             <span class="text-xs font-black min-w-[28px] text-center">${item.duration}m</span>
             <button onclick="adjustDuration(${index}, 5)" class="w-6 h-6 flex items-center justify-center font-black bg-slate-100 hover:bg-slate-200 border border-ink rounded-md text-xs">+</button>
-            <button onclick="removeItem(${index})" class="text-slate-400 hover:text-rose-500 font-bold ml-1 px-1">✕</button>
+            <button onclick="removeTimelineItem(${index})" class="text-slate-400 hover:text-rose-500 font-bold ml-1 px-1">✕</button>
           </div>
         `;
         container.appendChild(card);
@@ -367,23 +546,11 @@
       timelineItems[index].name = val;
     }
 
-    function removeItem(index) {
+    function removeTimelineItem(index) {
       timelineItems.splice(index, 1);
       renderTimeline();
     }
 
-    function addCustomItem() {
-      timelineItems.push({
-        id: 'c_' + Date.now(),
-        name: '自訂新練習項目',
-        duration: 15,
-        groupType: 'none',
-        color: 'bg-white'
-      });
-      renderTimeline();
-    }
-
-    // 計算總時長與進度條更新
     function updateTimeSummary() {
       const targetDuration = parseInt(document.getElementById('selectDuration').value);
       const totalMinutes = timelineItems.reduce((acc, cur) => acc + cur.duration, 0);
@@ -409,15 +576,214 @@
       }
     }
 
-    // --- 匯出功能 ---
+    // --- 菜單庫 (Library Modal) 功能 ---
+    let currentLibFilter = 'all';
 
+    function openLibraryModal() {
+      document.getElementById('libraryModal').classList.remove('hidden');
+      renderLibrary();
+    }
+
+    function closeLibraryModal() {
+      document.getElementById('libraryModal').classList.add('hidden');
+    }
+
+    function filterLibrary(cat) {
+      currentLibFilter = cat;
+      document.querySelectorAll('.lib-tab').forEach(tab => {
+        tab.classList.remove('bg-vYellow');
+        tab.classList.add('bg-white');
+      });
+      event.target.classList.remove('bg-white');
+      event.target.classList.add('bg-vYellow');
+      renderLibrary();
+    }
+
+    function renderLibrary() {
+      const container = document.getElementById('libraryList');
+      container.innerHTML = '';
+
+      const filtered = drillDatabase.filter(item => {
+        if (currentLibFilter === 'all') return true;
+        return item.category === currentLibFilter;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="text-center py-8 text-xs font-bold text-slate-400">此分類目前無項目，點擊下方新增！</div>`;
+        return;
+      }
+
+      filtered.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'p-3 bg-white border-2 border-ink rounded-xl shadow-pop-sm flex items-center justify-between gap-2';
+        div.innerHTML = `
+          <div class="flex-1 min-w-0" onclick="viewDrillDetails('${item.id}', false)">
+            <div class="flex items-center gap-1.5 mb-0.5">
+              <span class="text-[10px] font-black px-1.5 py-0.2 rounded border border-ink ${getCategoryBadgeColor(item.category)}">${getCategoryName(item.category)}</span>
+              <span class="text-xs font-black truncate">${item.name}</span>
+            </div>
+            <div class="text-[11px] font-medium text-slate-500 line-clamp-1">${item.desc || '暫無詳細說明 (點擊查看與編輯)'}</div>
+          </div>
+          <div class="flex items-center gap-1">
+            <button onclick="viewDrillDetails('${item.id}', false)" class="text-slate-400 hover:text-ink px-1.5 py-1 text-xs font-black">📖</button>
+            <button onclick="addDrillToTimeline('${item.id}')" class="bg-vYellow border border-ink px-2.5 py-1 rounded-lg text-xs font-black shadow-pop-sm btn-pop flex items-center gap-1">
+              <span>＋加選</span>
+            </button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function getCategoryName(cat) {
+      const map = { warmup: '熱身', basic: '基本功', defense: '防守', attack: '攻擊發接', scrimmage: '實戰', custom: '自訂' };
+      return map[cat] || '項目';
+    }
+
+    function getCategoryBadgeColor(cat) {
+      const map = { warmup: 'bg-emerald-100', basic: 'bg-yellow-100', defense: 'bg-orange-100', attack: 'bg-yellow-200', scrimmage: 'bg-sky-100', custom: 'bg-purple-100' };
+      return map[cat] || 'bg-slate-100';
+    }
+
+    function addDrillToTimeline(id) {
+      const target = drillDatabase.find(d => d.id === id);
+      if (target) {
+        // 拷貝進去
+        timelineItems.push(JSON.parse(JSON.stringify(target)));
+        renderTimeline();
+        showToast(`已加選「${target.name}」到今日菜單！🏐`);
+      }
+    }
+
+    // --- 查看詳細說明 Modal ---
+    function viewDrillDetails(id, fromTimeline) {
+      const target = drillDatabase.find(d => d.id === id) || timelineItems.find(d => d.id === id);
+      if (!target) return;
+
+      document.getElementById('detailTitle').innerText = target.name;
+      document.getElementById('detailCategoryBadge').innerText = getCategoryName(target.category);
+      document.getElementById('detailCategoryBadge').className = `text-[10px] font-black px-2 py-0.5 rounded-full border border-ink ${getCategoryBadgeColor(target.category)}`;
+      document.getElementById('detailDuration').innerText = `${target.duration} 分鐘`;
+
+      const groupMap = { none: '不需分組 / 全員一起', pair: '兩人一組', trio: '三人一組', six: '6 vs 6 隊形' };
+      document.getElementById('detailGroupType').innerText = groupMap[target.groupType] || '自由練習';
+      document.getElementById('detailDescription').innerText = target.desc || '尚無詳細操作說明。點擊下方「編輯修改此項目」即可補充說明！';
+
+      // 綁定按鈕動作
+      document.getElementById('btnEditFromDetail').onclick = () => {
+        closeDrillDetailModal();
+        openEditDrillModal(target.id);
+      };
+
+      document.getElementById('btnAddFromDetail').onclick = () => {
+        addDrillToTimeline(target.id);
+        closeDrillDetailModal();
+      };
+
+      document.getElementById('drillDetailModal').classList.remove('hidden');
+    }
+
+    function closeDrillDetailModal() {
+      document.getElementById('drillDetailModal').classList.add('hidden');
+    }
+
+    // --- 編輯 / 新增項目 Modal ---
+    function openEditDrillModal(id) {
+      editingDrillId = id;
+      const modalHeader = document.getElementById('editModalHeader');
+
+      if (id) {
+        modalHeader.innerText = '✏️ 編輯訓練項目';
+        const target = drillDatabase.find(d => d.id === id);
+        if (target) {
+          document.getElementById('editDrillName').value = target.name;
+          document.getElementById('editDrillCategory').value = target.category;
+          document.getElementById('editDrillDuration').value = target.duration;
+          document.getElementById('editDrillGroupType').value = target.groupType;
+          document.getElementById('editDrillDescription').value = target.desc || '';
+        }
+      } else {
+        modalHeader.innerText = '✨ 建立全新自訂項目';
+        document.getElementById('editDrillName').value = '';
+        document.getElementById('editDrillCategory').value = 'custom';
+        document.getElementById('editDrillDuration').value = 15;
+        document.getElementById('editDrillGroupType').value = 'none';
+        document.getElementById('editDrillDescription').value = '';
+      }
+
+      document.getElementById('editDrillModal').classList.remove('hidden');
+    }
+
+    function closeEditDrillModal() {
+      document.getElementById('editDrillModal').classList.add('hidden');
+    }
+
+    function saveDrillItem() {
+      const name = document.getElementById('editDrillName').value.trim();
+      if (!name) {
+        alert('請填寫項目名稱！');
+        return;
+      }
+
+      const cat = document.getElementById('editDrillCategory').value;
+      const dur = parseInt(document.getElementById('editDrillDuration').value) || 15;
+      const grp = document.getElementById('editDrillGroupType').value;
+      const desc = document.getElementById('editDrillDescription').value.trim();
+
+      if (editingDrillId) {
+        // 修改現存項目
+        const index = drillDatabase.findIndex(d => d.id === editingDrillId);
+        if (index !== -1) {
+          drillDatabase[index] = {
+            ...drillDatabase[index],
+            name,
+            category: cat,
+            duration: dur,
+            groupType: grp,
+            desc: desc,
+            color: getCategoryBadgeColor(cat)
+          };
+        }
+        // 如果今日排程裡也有這項，同步名稱與時長
+        timelineItems.forEach(t => {
+          if (t.id === editingDrillId) {
+            t.name = name;
+            t.duration = dur;
+            t.groupType = grp;
+            t.desc = desc;
+          }
+        });
+        showToast('項目修改成功！💾');
+      } else {
+        // 新增項目
+        const newId = 'custom_' + Date.now();
+        const newItem = {
+          id: newId,
+          name,
+          category: cat,
+          duration: dur,
+          groupType: grp,
+          desc: desc,
+          color: getCategoryBadgeColor(cat)
+        };
+        drillDatabase.push(newItem);
+        showToast('已新增至菜單庫！🎉');
+      }
+
+      saveDatabase();
+      closeEditDrillModal();
+      renderLibrary();
+      renderTimeline();
+    }
+
+    // --- 匯出功能 ---
     function showToast(msg) {
       const toast = document.getElementById('toast');
       toast.innerText = msg;
       toast.classList.remove('opacity-0', 'pointer-events-none');
       setTimeout(() => {
         toast.classList.add('opacity-0', 'pointer-events-none');
-      }, 2000);
+      }, 2200);
     }
 
     function copyLineFormat() {
@@ -426,18 +792,10 @@
       const totalDuration = timelineItems.reduce((acc, cur) => acc + cur.duration, 0);
       const endTime = addMinutesToTime(startTime, totalDuration);
 
-      const themeNames = {
-        basic: '基本功扎實',
-        defense: '防守接扣特訓',
-        attack: '攻擊與發接發',
-        scrimmage: '實戰賽前 Play'
-      };
-
       let text = `【🏐 今日練球菜單】\n`;
       text += `📅 日期：${dateVal}\n`;
       text += `⏰ 時間：${startTime} - ${endTime} (${totalDuration} min)\n`;
-      text += `👥 出席：${headcount} 人\n`;
-      text += `🎯 主題：${themeNames[currentTheme]}\n\n`;
+      text += `👥 出席：${headcount} 人\n\n`;
       text += `📋 流程規劃：\n`;
 
       let cur = startTime;
@@ -453,7 +811,7 @@
       navigator.clipboard.writeText(text).then(() => {
         showToast('已複製 LINE 格式文字！🏐');
       }).catch(() => {
-        showToast('複製失敗，請手動選取');
+        showToast('複製失敗，請手動複製');
       });
     }
 
@@ -465,16 +823,8 @@
       const totalDuration = timelineItems.reduce((acc, cur) => acc + cur.duration, 0);
       const endTime = addMinutesToTime(startTime, totalDuration);
 
-      const themeNames = {
-        basic: '基本功扎實',
-        defense: '防守接扣特訓',
-        attack: '攻擊與發接發',
-        scrimmage: '賽前實戰 Play'
-      };
-
-      // 填入卡片資訊
       document.getElementById('cardDateHeader').innerText = `${dateVal} • ${startTime} - ${endTime} (${totalDuration}m)`;
-      document.getElementById('cardThemeText').innerText = `🎯 主題：${themeNames[currentTheme]}`;
+      document.getElementById('cardThemeText').innerText = `🎯 項目數：共 ${timelineItems.length} 項`;
       document.getElementById('cardHeadcountText').innerText = `👥 出席：${headcount} 人`;
 
       const cardItemsContainer = document.getElementById('cardTimelineItems');
@@ -504,7 +854,7 @@
       const element = document.getElementById('exportCardWrapper');
 
       html2canvas(element, {
-        scale: 2, // 雙倍超高解析度
+        scale: 2,
         backgroundColor: '#FDFBF7'
       }).then(canvas => {
         const link = document.createElement('a');
