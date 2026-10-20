@@ -6,9 +6,9 @@
   <title>VolleyPlan 🏐 系隊練球菜單生成器</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- SortableJS for Touch Drag & Drop -->
+  <!-- SortableJS (Touch & Pointer Events Drag-and-Drop) -->
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-  <!-- html2canvas for Image Generation -->
+  <!-- html2canvas (DOM to Bitmap Capture) -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
   <script>
@@ -34,6 +34,7 @@
     }
   </script>
   <style>
+    /* 卡通下壓反饋按鈕 */
     .btn-pop:active {
       transform: translate(2px, 2px);
       box-shadow: 1px 1px 0px #1E293B;
@@ -42,7 +43,7 @@
       opacity: 0.4;
       background-color: #FEF08A !important;
     }
-    /* 隱藏滾動條但保持滾動 */
+    /* 隱藏滾動條但保持觸控滾動 */
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
@@ -54,7 +55,7 @@
 </head>
 <body class="bg-cream text-ink font-sans min-h-screen pb-32 select-none">
 
-  <!-- 頂部標題與庫入口 -->
+  <!-- 頂部導覽列 -->
   <header class="max-w-md mx-auto pt-6 px-4">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-2">
@@ -178,24 +179,26 @@
   <!-- ==================== 彈窗 A：完整菜單庫與管理 ==================== -->
   <div id="libraryModal" class="fixed inset-0 bg-ink/50 backdrop-blur-sm z-40 hidden flex items-end sm:items-center justify-center">
     <div class="bg-cream border-t-4 sm:border-4 border-ink rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[85vh] flex flex-col shadow-pop-lg overflow-hidden">
-      <!-- 標題 -->
-      <div class="p-4 bg-white border-b-2 border-ink flex justify-between items-center">
+      <!-- 標題列 -->
+      <div class="p-4 bg-white border-b-2 border-ink flex justify-between items-center flex-shrink-0">
         <div>
           <h2 class="text-lg font-black flex items-center gap-1.5"><span>📚</span> 訓練項目菜單庫</h2>
-          <p class="text-[11px] font-bold text-slate-500">點擊加號直接加入今日菜單，點項目看操作說明</p>
+          <p class="text-[11px] font-bold text-slate-500">點擊加選直接加入排程，點書本看詳細操作</p>
         </div>
         <button onclick="closeLibraryModal()" class="w-8 h-8 rounded-full bg-slate-100 border-2 border-ink font-black text-sm flex items-center justify-center btn-pop">✕</button>
       </div>
 
-      <!-- 分類標籤滑動列 -->
-      <div class="flex gap-1.5 p-3 overflow-x-auto no-scrollbar bg-slate-50 border-b-2 border-ink">
-        <button onclick="filterLibrary('all')" class="lib-tab active-tab px-3 py-1 rounded-xl text-xs font-black border-2 border-ink bg-vYellow shadow-pop-sm whitespace-nowrap btn-pop">全部</button>
-        <button onclick="filterLibrary('warmup')" class="lib-tab px-3 py-1 rounded-xl text-xs font-black border-2 border-ink bg-white shadow-pop-sm whitespace-nowrap btn-pop">熱身組曲</button>
-        <button onclick="filterLibrary('basic')" class="lib-tab px-3 py-1 rounded-xl text-xs font-black border-2 border-ink bg-white shadow-pop-sm whitespace-nowrap btn-pop">基本功</button>
-        <button onclick="filterLibrary('defense')" class="lib-tab px-3 py-1 rounded-xl text-xs font-black border-2 border-ink bg-white shadow-pop-sm whitespace-nowrap btn-pop">防守接扣</button>
-        <button onclick="filterLibrary('attack')" class="lib-tab px-3 py-1 rounded-xl text-xs font-black border-2 border-ink bg-white shadow-pop-sm whitespace-nowrap btn-pop">攻擊發接</button>
-        <button onclick="filterLibrary('scrimmage')" class="lib-tab px-3 py-1 rounded-xl text-xs font-black border-2 border-ink bg-white shadow-pop-sm whitespace-nowrap btn-pop">實戰 Play</button>
-        <button onclick="filterLibrary('custom')" class="lib-tab px-3 py-1 rounded-xl text-xs font-black border-2 border-ink bg-white shadow-pop-sm whitespace-nowrap btn-pop">我的自訂</button>
+      <!-- 分類標籤滑動列 (已修復擠壓，支援觸控滑動) -->
+      <div class="flex-shrink-0 bg-slate-50 border-b-2 border-ink py-2.5 px-3">
+        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth" style="-webkit-overflow-scrolling: touch;">
+          <button onclick="filterLibrary('all')" class="lib-tab active-tab flex-shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-black border-2 border-ink bg-vYellow shadow-pop-sm whitespace-nowrap btn-pop">全部</button>
+          <button onclick="filterLibrary('warmup')" class="lib-tab flex-shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-black border-2 border-ink bg-white shadow-pop-sm whitespace-nowrap btn-pop">熱身組曲</button>
+          <button onclick="filterLibrary('basic')" class="lib-tab flex-shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-black border-2 border-ink bg-white shadow-pop-sm whitespace-nowrap btn-pop">基本功</button>
+          <button onclick="filterLibrary('defense')" class="lib-tab flex-shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-black border-2 border-ink bg-white shadow-pop-sm whitespace-nowrap btn-pop">防守接扣</button>
+          <button onclick="filterLibrary('attack')" class="lib-tab flex-shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-black border-2 border-ink bg-white shadow-pop-sm whitespace-nowrap btn-pop">攻擊發接</button>
+          <button onclick="filterLibrary('scrimmage')" class="lib-tab flex-shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-black border-2 border-ink bg-white shadow-pop-sm whitespace-nowrap btn-pop">實戰 Play</button>
+          <button onclick="filterLibrary('custom')" class="lib-tab flex-shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-black border-2 border-ink bg-white shadow-pop-sm whitespace-nowrap btn-pop">我的自訂</button>
+        </div>
       </div>
 
       <!-- 菜單庫清單 -->
@@ -203,8 +206,8 @@
         <!-- JS 動態插入 -->
       </div>
 
-      <!-- 底部新增按鈕 -->
-      <div class="p-3 bg-white border-t-2 border-ink">
+      <!-- 底部按鈕 -->
+      <div class="p-3 bg-white border-t-2 border-ink flex-shrink-0">
         <button onclick="openEditDrillModal(null)" class="w-full bg-vGreen border-2 border-ink py-2 rounded-xl font-black text-xs shadow-pop-sm btn-pop">
           ＋ 建立全新自訂項目到庫中
         </button>
@@ -300,36 +303,47 @@
     </div>
   </div>
 
-  <!-- Toast 提示 -->
+  <!-- Toast 提示元件 -->
   <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-ink text-white text-xs font-bold px-4 py-2 rounded-full border-2 border-vYellow shadow-pop-lg transition-all duration-300 opacity-0 pointer-events-none z-50">
     提示訊息
   </div>
 
-  <!-- 螢幕外專案卡片繪圖 DOM (html2canvas) -->
-  <div id="exportCardWrapper" class="fixed -left-[9999px] top-0 w-[400px] bg-cream p-5 text-ink font-sans border-4 border-ink rounded-3xl">
-    <div class="bg-vYellow border-2 border-ink rounded-2xl p-3 shadow-pop-sm mb-4 text-center">
-      <div class="text-2xl font-black tracking-wider flex items-center justify-center gap-2">
-        <span>🏐</span> 練球菜單
+  <!-- 專屬圖片生成容器 (使用 visibility:hidden 確保文字與框線不位移) -->
+  <div style="position: fixed; left: 0; top: 0; z-index: -50; visibility: hidden; pointer-events: none;">
+    <div id="exportCardWrapper" style="width: 420px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;" class="bg-cream p-5 text-ink border-4 border-ink rounded-3xl box-border">
+      <!-- 頂部標題框 -->
+      <div class="bg-vYellow border-2 border-ink rounded-2xl p-3 shadow-pop-sm mb-3 text-center">
+        <div class="text-2xl font-black tracking-wider flex items-center justify-center gap-2 leading-tight">
+          <span>🏐</span> 練球菜單
+        </div>
+        <div id="cardDateHeader" class="text-xs font-black text-slate-800 mt-1 leading-normal">
+          2026-10-20 • 18:00 - 20:15 (135m)
+        </div>
       </div>
-      <div id="cardDateHeader" class="text-xs font-black text-slate-700 mt-1">2026/10/20 • 18:00 - 20:00</div>
-    </div>
-    
-    <div class="flex justify-around bg-white border-2 border-ink rounded-xl py-2 mb-4 text-xs font-black shadow-pop-sm">
-      <div id="cardThemeText">🎯 主題：綜合練球</div>
-      <div id="cardHeadcountText">👥 出席：12 人</div>
-    </div>
+      
+      <!-- 狀態欄 -->
+      <div class="flex justify-around bg-white border-2 border-ink rounded-xl py-2 mb-3 text-xs font-black shadow-pop-sm">
+        <div id="cardThemeText">🎯 項目數：共 10 項</div>
+        <div id="cardHeadcountText">👥 出席：12 人</div>
+      </div>
 
-    <div id="cardTimelineItems" class="space-y-2"></div>
+      <!-- 菜單時間軸清單 -->
+      <div id="cardTimelineItems" class="space-y-1.5">
+        <!-- JS 填入 -->
+      </div>
 
-    <div class="text-center text-[10px] font-black text-slate-400 mt-5 pt-3 border-t-2 border-dashed border-slate-300">
-      VolleyPlan • 準時到場，熱身做足！💪
+      <!-- 底部標語 -->
+      <div class="text-center text-[11px] font-black text-slate-400 mt-4 pt-3 border-t-2 border-dashed border-slate-300 leading-normal">
+        VolleyPlan • 準時到場，熱身做足！💪
+      </div>
     </div>
   </div>
 
+  <!-- 邏輯腳本 -->
   <script>
-    // --- 預設訓練項目資料庫 (含詳細操作說明) ---
+    // --- 預設訓練項目資料庫 ---
     const DEFAULT_DRILL_DATABASE = [
-      // 熱身組曲
+      // 熱身組曲 (專屬五部曲)
       { id: 'w1', category: 'warmup', name: '慢跑排球場 (兩圈)', duration: 3, groupType: 'none', color: 'bg-emerald-100',
         desc: '繞排球場邊線慢跑兩圈，第一圈正跑提升心率，第二圈可搭配小跳步側併步。' },
       { id: 'w2', category: 'warmup', name: '靜態暖身與伸展', duration: 5, groupType: 'none', color: 'bg-emerald-100',
@@ -381,7 +395,8 @@
     let timelineItems = [];
     let currentTheme = 'basic';
     let headcount = 12;
-    let editingDrillId = null; // 當前正在編輯的項目 ID
+    let editingDrillId = null;
+    let currentLibFilter = 'all';
 
     // --- 本地儲存 (LocalStorage) 管理 ---
     function loadDatabase() {
@@ -406,13 +421,13 @@
     window.addEventListener('DOMContentLoaded', () => {
       loadDatabase();
 
-      // 設定預設日期
+      // 設定預設日期 (今日)
       const today = new Date().toISOString().split('T')[0];
       document.getElementById('inputDate').value = today;
 
-      generatePlan(); // 生成初始菜單
+      generatePlan();
 
-      // 初始化拖曳
+      // 初始化觸控拖曳排序 (SortableJS)
       const el = document.getElementById('timelineList');
       Sortable.create(el, {
         handle: '.drag-handle',
@@ -429,9 +444,8 @@
       document.getElementById('selectDuration').addEventListener('change', updateTimeSummary);
     });
 
-    // --- 範本生成邏輯 ---
+    // --- 菜單生成核心 ---
     function generatePlan() {
-      // 依分類抓出熱身與特定主題
       const warmups = drillDatabase.filter(d => d.category === 'warmup');
       let primaries = [];
 
@@ -445,7 +459,6 @@
         primaries = drillDatabase.filter(d => ['b1', 'a2', 's1', 'b5'].includes(d.id));
       }
 
-      // 複製一份進今日 timeline
       timelineItems = JSON.parse(JSON.stringify([...warmups, ...primaries]));
       renderTimeline();
     }
@@ -473,7 +486,6 @@
       renderTimeline();
     }
 
-    // 計算分組提示文字
     function getGroupHint(type, total) {
       if (type === 'pair') {
         const groups = Math.floor(total / 2);
@@ -498,7 +510,7 @@
       return `${endH}:${endM}`;
     }
 
-    // --- 渲染今日排程 ---
+    // --- 渲染排程卡片清單 ---
     function renderTimeline() {
       const container = document.getElementById('timelineList');
       container.innerHTML = '';
@@ -576,9 +588,7 @@
       }
     }
 
-    // --- 菜單庫 (Library Modal) 功能 ---
-    let currentLibFilter = 'all';
-
+    // --- 菜單庫彈窗互動 ---
     function openLibraryModal() {
       document.getElementById('libraryModal').classList.remove('hidden');
       renderLibrary();
@@ -594,8 +604,15 @@
         tab.classList.remove('bg-vYellow');
         tab.classList.add('bg-white');
       });
-      event.target.classList.remove('bg-white');
-      event.target.classList.add('bg-vYellow');
+
+      const tabs = Array.from(document.querySelectorAll('.lib-tab'));
+      const activeBtn = tabs.find(t => t.getAttribute('onclick').includes(`'${cat}'`));
+      if (activeBtn) {
+        activeBtn.classList.remove('bg-white');
+        activeBtn.classList.add('bg-vYellow');
+        activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+
       renderLibrary();
     }
 
@@ -609,7 +626,7 @@
       });
 
       if (filtered.length === 0) {
-        container.innerHTML = `<div class="text-center py-8 text-xs font-bold text-slate-400">此分類目前無項目，點擊下方新增！</div>`;
+        container.innerHTML = `<div class="text-center py-8 text-xs font-bold text-slate-400">此分類目前無項目，點擊下方建立！</div>`;
         return;
       }
 
@@ -622,7 +639,7 @@
               <span class="text-[10px] font-black px-1.5 py-0.2 rounded border border-ink ${getCategoryBadgeColor(item.category)}">${getCategoryName(item.category)}</span>
               <span class="text-xs font-black truncate">${item.name}</span>
             </div>
-            <div class="text-[11px] font-medium text-slate-500 line-clamp-1">${item.desc || '暫無詳細說明 (點擊查看與編輯)'}</div>
+            <div class="text-[11px] font-medium text-slate-500 line-clamp-1">${item.desc || '點擊查看與編輯詳細說明'}</div>
           </div>
           <div class="flex items-center gap-1">
             <button onclick="viewDrillDetails('${item.id}', false)" class="text-slate-400 hover:text-ink px-1.5 py-1 text-xs font-black">📖</button>
@@ -648,14 +665,13 @@
     function addDrillToTimeline(id) {
       const target = drillDatabase.find(d => d.id === id);
       if (target) {
-        // 拷貝進去
         timelineItems.push(JSON.parse(JSON.stringify(target)));
         renderTimeline();
         showToast(`已加選「${target.name}」到今日菜單！🏐`);
       }
     }
 
-    // --- 查看詳細說明 Modal ---
+    // --- 查看說明彈窗 ---
     function viewDrillDetails(id, fromTimeline) {
       const target = drillDatabase.find(d => d.id === id) || timelineItems.find(d => d.id === id);
       if (!target) return;
@@ -669,7 +685,6 @@
       document.getElementById('detailGroupType').innerText = groupMap[target.groupType] || '自由練習';
       document.getElementById('detailDescription').innerText = target.desc || '尚無詳細操作說明。點擊下方「編輯修改此項目」即可補充說明！';
 
-      // 綁定按鈕動作
       document.getElementById('btnEditFromDetail').onclick = () => {
         closeDrillDetailModal();
         openEditDrillModal(target.id);
@@ -687,7 +702,7 @@
       document.getElementById('drillDetailModal').classList.add('hidden');
     }
 
-    // --- 編輯 / 新增項目 Modal ---
+    // --- 編輯 / 新增項目彈窗 ---
     function openEditDrillModal(id) {
       editingDrillId = id;
       const modalHeader = document.getElementById('editModalHeader');
@@ -731,7 +746,6 @@
       const desc = document.getElementById('editDrillDescription').value.trim();
 
       if (editingDrillId) {
-        // 修改現存項目
         const index = drillDatabase.findIndex(d => d.id === editingDrillId);
         if (index !== -1) {
           drillDatabase[index] = {
@@ -744,7 +758,6 @@
             color: getCategoryBadgeColor(cat)
           };
         }
-        // 如果今日排程裡也有這項，同步名稱與時長
         timelineItems.forEach(t => {
           if (t.id === editingDrillId) {
             t.name = name;
@@ -755,7 +768,6 @@
         });
         showToast('項目修改成功！💾');
       } else {
-        // 新增項目
         const newId = 'custom_' + Date.now();
         const newItem = {
           id: newId,
@@ -816,7 +828,7 @@
     }
 
     function exportCardImage() {
-      showToast('正在產生卡片圖片...⏳');
+      showToast('正在產生精美圖卡...⏳');
 
       const dateVal = document.getElementById('inputDate').value;
       const startTime = document.getElementById('inputStartTime').value;
@@ -836,15 +848,15 @@
         const groupHint = getGroupHint(item.groupType, headcount);
 
         const row = document.createElement('div');
-        row.className = 'flex items-center justify-between bg-white border border-ink p-2 rounded-xl text-xs font-bold';
+        row.className = 'flex items-center justify-between bg-white border-2 border-ink px-2.5 py-1.5 rounded-xl shadow-pop-sm text-xs font-bold leading-none';
         row.innerHTML = `
-          <div class="flex items-center gap-1.5">
-            <span class="text-[10px] font-black px-1 rounded bg-slate-100 border border-slate-400">${cur}</span>
-            <span>${item.name}</span>
+          <div class="flex items-center gap-2 overflow-hidden pr-1">
+            <span class="text-[10px] font-black px-1.5 py-1 rounded bg-slate-100 border border-ink flex-shrink-0">${cur}</span>
+            <span class="truncate font-black text-slate-800">${item.name}</span>
           </div>
-          <div class="flex items-center gap-1">
-            ${groupHint ? `<span class="text-[9px] bg-purple-100 text-purple-900 border border-purple-300 px-1 rounded">${groupHint}</span>` : ''}
-            <span class="text-[10px] text-slate-500 font-black">${item.duration}m</span>
+          <div class="flex items-center gap-1.5 flex-shrink-0">
+            ${groupHint ? `<span class="text-[10px] font-black bg-purple-100 text-purple-900 border border-purple-400 px-1.5 py-0.5 rounded-md">${groupHint}</span>` : ''}
+            <span class="text-[11px] text-slate-600 font-black min-w-[28px] text-right">${item.duration}m</span>
           </div>
         `;
         cardItemsContainer.appendChild(row);
@@ -852,16 +864,28 @@
       });
 
       const element = document.getElementById('exportCardWrapper');
+      const parentContainer = element.parentElement;
+
+      // 暫時解除隱藏以便 html2canvas 精準捕捉 DOM 節點
+      parentContainer.style.visibility = 'visible';
 
       html2canvas(element, {
         scale: 2,
-        backgroundColor: '#FDFBF7'
+        backgroundColor: '#FDFBF7',
+        useCORS: true,
+        logging: false
       }).then(canvas => {
+        parentContainer.style.visibility = 'hidden';
+
         const link = document.createElement('a');
         link.download = `練球菜單_${dateVal}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
         showToast('圖片已下載完成！🖼️');
+      }).catch(err => {
+        parentContainer.style.visibility = 'hidden';
+        showToast('生成失敗，請重試');
+        console.error(err);
       });
     }
   </script>
