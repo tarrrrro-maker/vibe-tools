@@ -49,6 +49,18 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
+    /* 專門保證圖片算繪絕對精準的穩定樣式 */
+    .render-row {
+      display: table !important;
+      width: 100% !important;
+      table-layout: fixed !important;
+      height: 44px !important;
+      box-sizing: border-box !important;
+    }
+    .render-cell {
+      display: table-cell !important;
+      vertical-align: middle !important;
+    }
   </style>
 </head>
 <body class="bg-cream text-ink font-sans min-h-screen pb-32 select-none">
@@ -61,8 +73,9 @@
         <h1 class="text-2xl font-black tracking-tight">VolleyPlan</h1>
       </div>
       <div class="flex gap-2">
-        <button onclick="resetAllData()" class="bg-slate-100 border-2 border-ink px-2.5 py-1.5 rounded-xl text-xs font-black shadow-pop-sm btn-pop" title="重置資料庫">
-          🔄 重置
+        <!-- 修正後的重置按鈕：只重置今日排程，不碰菜單庫 -->
+        <button onclick="resetCurrentPlan()" class="bg-slate-100 border-2 border-ink px-2.5 py-1.5 rounded-xl text-xs font-black shadow-pop-sm btn-pop" title="只重置今日排程">
+          🔄 重置排程
         </button>
         <button onclick="openLibraryModal()" class="bg-vPurple/30 border-2 border-ink px-3 py-1.5 rounded-xl text-xs font-black shadow-pop-sm btn-pop flex items-center gap-1">
           <span>📚 菜單庫</span>
@@ -109,7 +122,7 @@
 
       <!-- 訓練主題膠囊選單 -->
       <div>
-        <label class="block text-xs font-black text-slate-500 mb-2">🎯 快速套用範本</label>
+        <label class="block text-xs font-black text-slate-500 mb-2">🎯 快速套用主題（依總時間智慧調整）</label>
         <div class="grid grid-cols-2 gap-2">
           <button onclick="setTheme('basic')" id="btn-theme-basic" class="theme-btn py-1.5 px-2 rounded-xl border-2 border-ink text-xs font-black bg-vGreen shadow-pop-sm btn-pop">
             🟢 基本功扎實
@@ -301,26 +314,33 @@
     提示訊息
   </div>
 
-  <!-- 繪圖容器 -->
-  <div style="position: fixed; left: 0; top: 0; z-index: -50; visibility: hidden; pointer-events: none;">
-    <div id="exportCardWrapper" style="width: 420px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;" class="bg-cream p-5 text-ink border-4 border-ink rounded-3xl box-border">
-      <div class="bg-vYellow border-2 border-ink rounded-2xl p-3 shadow-pop-sm mb-3 text-center">
-        <div class="text-2xl font-black tracking-wider flex items-center justify-center gap-2 leading-tight">
-          <span>🏐</span> 練球菜單
+  <!-- ==================== 徹底解決文字位移的圖片算繪容器 ==================== -->
+  <div style="position: absolute; left: 0; top: 0; z-index: -9999; visibility: hidden; pointer-events: none;">
+    <div id="exportCardWrapper" style="width: 380px; box-sizing: border-box; background-color: #FDFBF7; border: 4px solid #1E293B; border-radius: 24px; padding: 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+      
+      <!-- 頂部標題框 -->
+      <div style="background-color: #FACC15; border: 2px solid #1E293B; border-radius: 16px; padding: 12px; text-align: center; margin-bottom: 12px; box-shadow: 2px 2px 0px #1E293B;">
+        <div style="font-size: 22px; font-weight: 900; line-height: 28px; color: #1E293B;">
+          🏐 練球菜單
         </div>
-        <div id="cardDateHeader" class="text-xs font-black text-slate-800 mt-1 leading-normal">
-          2026-10-20 • 18:00 - 20:15 (135m)
+        <div id="cardDateHeader" style="font-size: 11px; font-weight: 800; color: #334155; margin-top: 4px; line-height: 16px;">
+          2026-10-20 • 18:00 - 20:00 (120m)
         </div>
       </div>
       
-      <div class="flex justify-around bg-white border-2 border-ink rounded-xl py-2 mb-3 text-xs font-black shadow-pop-sm">
-        <div id="cardThemeText">🎯 項目數：共 10 項</div>
-        <div id="cardHeadcountText">👥 出席：12 人</div>
+      <!-- 狀態欄 -->
+      <div style="background-color: #FFFFFF; border: 2px solid #1E293B; border-radius: 12px; padding: 8px 12px; margin-bottom: 12px; box-shadow: 2px 2px 0px #1E293B; display: table; width: 100%; box-sizing: border-box;">
+        <div id="cardThemeText" style="display: table-cell; font-size: 11px; font-weight: 800; color: #1E293B;">🎯 項目數：共 9 項</div>
+        <div id="cardHeadcountText" style="display: table-cell; text-align: right; font-size: 11px; font-weight: 800; color: #1E293B;">👥 出席：12 人</div>
       </div>
 
-      <div id="cardTimelineItems" class="space-y-1.5"></div>
+      <!-- 菜單時間軸清單 (採用 table-cell 垂直居中，100% 杜絕壓扁與切字) -->
+      <div id="cardTimelineItems" style="width: 100%;">
+        <!-- JS 動態插入 -->
+      </div>
 
-      <div class="text-center text-[11px] font-black text-slate-400 mt-4 pt-3 border-t-2 border-dashed border-slate-300 leading-normal">
+      <!-- 底部標語 -->
+      <div style="text-align: center; font-size: 10px; font-weight: 800; color: #94A3B8; margin-top: 14px; padding-top: 10px; border-top: 2px dashed #CBD5E1;">
         VolleyPlan • 準時到場，熱身做足！💪
       </div>
     </div>
@@ -395,13 +415,11 @@
       }
     }
 
-    function resetAllData() {
-      if (confirm('確定要將訓練菜單庫重置為預設狀態嗎？自訂項目將會被清空。')) {
-        localStorage.removeItem('volleyplan_drill_db_v2');
-        drillDatabase = [...DEFAULT_DRILL_DATABASE];
-        saveDatabase();
+    // 安全重置：只重置今日排程，絕對不動你的菜單庫！
+    function resetCurrentPlan() {
+      if (confirm('確定要將今日排程恢復為預設狀態嗎？（放心，你自訂的菜單庫不會被清空）')) {
         generatePlan();
-        showToast('已重置為預設資料庫！🔄');
+        showToast('今日排程已重置完成！🔄');
       }
     }
 
@@ -431,22 +449,20 @@
 
         document.getElementById('inputStartTime').addEventListener('change', renderTimeline);
         document.getElementById('selectDuration').addEventListener('change', () => {
-          generatePlan(); // 切換總時間時自動重新依新時長排定
+          generatePlan();
         });
       } catch (err) {
         console.error("Initialization error:", err);
       }
     });
 
-    // 核心生成演算法 (已升級：依據總時長動態分配數量與時間，加入洗牌輪替機制)
+    // 動態總時長與輪替演算法
     function generatePlan() {
       const targetDuration = parseInt(document.getElementById('selectDuration').value) || 120;
       
-      // 1. 固定熱身 5 部曲 (共 25 分鐘)
       const warmups = drillDatabase.filter(d => d.category === 'warmup');
       const warmupTotal = warmups.reduce((acc, cur) => acc + cur.duration, 0); // 25m
       
-      // 2. 結尾收操 (90分排 10m，其餘排 15m)
       const coolDownDuration = targetDuration <= 90 ? 10 : 15;
       const cooldownItem = drillDatabase.find(d => d.id === 'b5') || {
         id: 'b5', category: 'basic', name: '收操與檢討', duration: coolDownDuration, groupType: 'none', color: 'bg-slate-100'
@@ -454,10 +470,8 @@
       const finalCooldown = JSON.parse(JSON.stringify(cooldownItem));
       finalCooldown.duration = coolDownDuration;
 
-      // 3. 計算中間主訓練可用時間
       let mainAvailableTime = targetDuration - warmupTotal - coolDownDuration;
 
-      // 4. 抓出該主題可用的候選訓練庫
       let candidatePool = [];
       if (currentTheme === 'basic') {
         candidatePool = drillDatabase.filter(d => ['b1', 'b2', 'b3', 'b4'].includes(d.id));
@@ -469,25 +483,21 @@
         candidatePool = drillDatabase.filter(d => ['b1', 'a2', 's1'].includes(d.id));
       }
 
-      // 如果時間很長 (150分以上)，自動把 6vs6 實戰 Play 納入候選池
       if (targetDuration >= 150 && currentTheme !== 'scrimmage') {
         const playItem = drillDatabase.find(d => d.id === 's1');
         if (playItem && !candidatePool.some(d => d.id === 's1')) candidatePool.push(playItem);
       }
 
-      // 5. 隨機洗牌演算法 (增加每次點擊生成的變化度)
       const shuffled = [...candidatePool].sort(() => 0.5 - Math.random());
 
-      // 6. 依總時間決定要挑幾項
       let pickCount = 3;
-      if (targetDuration <= 90) pickCount = 2;       // 90分：只挑 2 項
-      else if (targetDuration === 120) pickCount = 3; // 120分：挑 3 項
-      else if (targetDuration >= 150) pickCount = 4;  // 150分以上：挑 4 項
+      if (targetDuration <= 90) pickCount = 2;
+      else if (targetDuration === 120) pickCount = 3;
+      else if (targetDuration >= 150) pickCount = 4;
 
       let selectedItems = shuffled.slice(0, pickCount);
       if (selectedItems.length === 0) selectedItems = candidatePool;
 
-      // 7. 平均分配剩餘時間給選出的項目 (以 5 分鐘為單位整除)
       const eachDuration = Math.max(10, Math.floor(mainAvailableTime / selectedItems.length / 5) * 5);
       let remainder = mainAvailableTime - (eachDuration * selectedItems.length);
 
@@ -497,7 +507,6 @@
         return copy;
       });
 
-      // 8. 組合完成：熱身(25m) + 主項目 + 收操
       timelineItems = JSON.parse(JSON.stringify([...warmups, ...mainDrills, finalCooldown]));
       renderTimeline();
     }
@@ -864,6 +873,7 @@
       });
     }
 
+    // --- 完全重寫的卡片截圖邏輯：純表格佈局，不依賴 flex，100% 杜絕壓扁切字 ---
     function exportCardImage() {
       showToast('正在產生精美圖卡...⏳');
 
@@ -884,16 +894,26 @@
         const next = addMinutesToTime(cur, item.duration);
         const groupHint = getGroupHint(item.groupType, headcount);
 
+        // 使用標準 HTML Table 結構，徹底根除手機截圖高度坍塌問題
         const row = document.createElement('div');
-        row.className = 'flex items-center justify-between bg-white border-2 border-ink px-2.5 py-1.5 rounded-xl shadow-pop-sm text-xs font-bold leading-none';
+        row.style.cssText = 'background-color: #FFFFFF; border: 2px solid #1E293B; border-radius: 12px; margin-bottom: 6px; padding: 0 8px; box-shadow: 2px 2px 0px #1E293B;';
+        row.className = 'render-row';
         row.innerHTML = `
-          <div class="flex items-center gap-2 overflow-hidden pr-1">
-            <span class="text-[10px] font-black px-1.5 py-1 rounded bg-slate-100 border border-ink flex-shrink-0">${cur}</span>
-            <span class="truncate font-black text-slate-800">${item.name}</span>
+          <div class="render-cell" style="width: 50px;">
+            <span style="font-size: 10px; font-weight: 900; background-color: #F1F5F9; border: 1px solid #1E293B; border-radius: 4px; padding: 2px 4px; display: inline-block; line-height: 12px; color: #1E293B;">
+              ${cur}
+            </span>
           </div>
-          <div class="flex items-center gap-1.5 flex-shrink-0">
-            ${groupHint ? `<span class="text-[10px] font-black bg-purple-100 text-purple-900 border border-purple-400 px-1.5 py-0.5 rounded-md">${groupHint}</span>` : ''}
-            <span class="text-[11px] text-slate-600 font-black min-w-[28px] text-right">${item.duration}m</span>
+          <div class="render-cell" style="padding-left: 6px; text-align: left;">
+            <div style="font-size: 11px; font-weight: 900; color: #1E293B; line-height: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px;">
+              ${item.name}
+            </div>
+          </div>
+          <div class="render-cell" style="text-align: right; width: 110px;">
+            ${groupHint ? `<span style="font-size: 9px; font-weight: 800; background-color: #F3E8FF; color: #581C87; border: 1px solid #C084FC; border-radius: 4px; padding: 1px 4px; margin-right: 4px; display: inline-block; line-height: 12px;">${groupHint}</span>` : ''}
+            <span style="font-size: 10px; font-weight: 900; color: #64748B; display: inline-block; min-width: 24px; text-align: right; line-height: 12px;">
+              ${item.duration}m
+            </span>
           </div>
         `;
         cardItemsContainer.appendChild(row);
@@ -903,6 +923,7 @@
       const element = document.getElementById('exportCardWrapper');
       const parentContainer = element.parentElement;
 
+      // 暫時解除隱藏
       parentContainer.style.visibility = 'visible';
 
       html2canvas(element, {
