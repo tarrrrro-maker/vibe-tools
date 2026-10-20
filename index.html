@@ -151,9 +151,7 @@
         </button>
       </div>
 
-      <div id="timelineList" class="space-y-2.5 min-h-[50px]">
-        <!-- 動態渲染卡片 -->
-      </div>
+      <div id="timelineList" class="space-y-2.5 min-h-[50px]"></div>
 
       <div class="grid grid-cols-2 gap-2 pt-1">
         <button onclick="openLibraryModal()" class="w-full py-2.5 border-2 border-dashed border-ink bg-white/70 hover:bg-white rounded-2xl font-black text-xs text-slate-700 shadow-pop-sm btn-pop">
@@ -179,7 +177,7 @@
     </div>
   </footer>
 
-  <!-- ==================== 彈窗 A：完整菜單庫與管理 ==================== -->
+  <!-- 彈窗 A：完整菜單庫與管理 -->
   <div id="libraryModal" class="fixed inset-0 bg-ink/50 backdrop-blur-sm z-40 hidden flex items-end sm:items-center justify-center">
     <div class="bg-cream border-t-4 sm:border-4 border-ink rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[85vh] flex flex-col shadow-pop-lg overflow-hidden">
       <div class="p-4 bg-white border-b-2 border-ink flex justify-between items-center flex-shrink-0">
@@ -190,7 +188,6 @@
         <button onclick="closeLibraryModal()" class="w-8 h-8 rounded-full bg-slate-100 border-2 border-ink font-black text-sm flex items-center justify-center btn-pop">✕</button>
       </div>
 
-      <!-- 分類標籤滑動列 -->
       <div class="flex-shrink-0 bg-slate-50 border-b-2 border-ink py-2.5 px-3">
         <div class="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth" style="-webkit-overflow-scrolling: touch;">
           <button onclick="filterLibrary('all', this)" class="lib-tab flex-shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-black border-2 border-ink bg-vYellow shadow-pop-sm whitespace-nowrap btn-pop">全部</button>
@@ -213,7 +210,7 @@
     </div>
   </div>
 
-  <!-- ==================== 彈窗 B：項目詳細說明與操作要領 ==================== -->
+  <!-- 彈窗 B：項目詳細說明與操作要領 -->
   <div id="drillDetailModal" class="fixed inset-0 bg-ink/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white border-4 border-ink rounded-3xl w-full max-w-sm p-5 shadow-pop-lg relative max-h-[80vh] flex flex-col">
       <div class="flex justify-between items-start mb-3">
@@ -247,7 +244,7 @@
     </div>
   </div>
 
-  <!-- ==================== 彈窗 C：新增/編輯菜單庫項目 ==================== -->
+  <!-- 彈窗 C：新增/編輯菜單庫項目 -->
   <div id="editDrillModal" class="fixed inset-0 bg-ink/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white border-4 border-ink rounded-3xl w-full max-w-sm p-5 shadow-pop-lg">
       <h3 id="editModalHeader" class="text-base font-black mb-3">✏️ 編輯訓練項目</h3>
@@ -433,27 +430,75 @@
         }
 
         document.getElementById('inputStartTime').addEventListener('change', renderTimeline);
-        document.getElementById('selectDuration').addEventListener('change', updateTimeSummary);
+        document.getElementById('selectDuration').addEventListener('change', () => {
+          generatePlan(); // 切換總時間時自動重新依新時長排定
+        });
       } catch (err) {
         console.error("Initialization error:", err);
       }
     });
 
+    // 核心生成演算法 (已升級：依據總時長動態分配數量與時間，加入洗牌輪替機制)
     function generatePlan() {
+      const targetDuration = parseInt(document.getElementById('selectDuration').value) || 120;
+      
+      // 1. 固定熱身 5 部曲 (共 25 分鐘)
       const warmups = drillDatabase.filter(d => d.category === 'warmup');
-      let primaries = [];
+      const warmupTotal = warmups.reduce((acc, cur) => acc + cur.duration, 0); // 25m
+      
+      // 2. 結尾收操 (90分排 10m，其餘排 15m)
+      const coolDownDuration = targetDuration <= 90 ? 10 : 15;
+      const cooldownItem = drillDatabase.find(d => d.id === 'b5') || {
+        id: 'b5', category: 'basic', name: '收操與檢討', duration: coolDownDuration, groupType: 'none', color: 'bg-slate-100'
+      };
+      const finalCooldown = JSON.parse(JSON.stringify(cooldownItem));
+      finalCooldown.duration = coolDownDuration;
 
+      // 3. 計算中間主訓練可用時間
+      let mainAvailableTime = targetDuration - warmupTotal - coolDownDuration;
+
+      // 4. 抓出該主題可用的候選訓練庫
+      let candidatePool = [];
       if (currentTheme === 'basic') {
-        primaries = drillDatabase.filter(d => ['b1', 'b2', 'b3', 'b4', 'b5'].includes(d.id));
+        candidatePool = drillDatabase.filter(d => ['b1', 'b2', 'b3', 'b4'].includes(d.id));
       } else if (currentTheme === 'defense') {
-        primaries = drillDatabase.filter(d => ['d1', 'd2', 'd3', 'd4', 'b5'].includes(d.id));
+        candidatePool = drillDatabase.filter(d => ['d1', 'd2', 'd3', 'd4'].includes(d.id));
       } else if (currentTheme === 'attack') {
-        primaries = drillDatabase.filter(d => ['a1', 'a2', 'a3', 'b4', 'b5'].includes(d.id));
+        candidatePool = drillDatabase.filter(d => ['a1', 'a2', 'a3'].includes(d.id));
       } else if (currentTheme === 'scrimmage') {
-        primaries = drillDatabase.filter(d => ['b1', 'a2', 's1', 'b5'].includes(d.id));
+        candidatePool = drillDatabase.filter(d => ['b1', 'a2', 's1'].includes(d.id));
       }
 
-      timelineItems = JSON.parse(JSON.stringify([...warmups, ...primaries]));
+      // 如果時間很長 (150分以上)，自動把 6vs6 實戰 Play 納入候選池
+      if (targetDuration >= 150 && currentTheme !== 'scrimmage') {
+        const playItem = drillDatabase.find(d => d.id === 's1');
+        if (playItem && !candidatePool.some(d => d.id === 's1')) candidatePool.push(playItem);
+      }
+
+      // 5. 隨機洗牌演算法 (增加每次點擊生成的變化度)
+      const shuffled = [...candidatePool].sort(() => 0.5 - Math.random());
+
+      // 6. 依總時間決定要挑幾項
+      let pickCount = 3;
+      if (targetDuration <= 90) pickCount = 2;       // 90分：只挑 2 項
+      else if (targetDuration === 120) pickCount = 3; // 120分：挑 3 項
+      else if (targetDuration >= 150) pickCount = 4;  // 150分以上：挑 4 項
+
+      let selectedItems = shuffled.slice(0, pickCount);
+      if (selectedItems.length === 0) selectedItems = candidatePool;
+
+      // 7. 平均分配剩餘時間給選出的項目 (以 5 分鐘為單位整除)
+      const eachDuration = Math.max(10, Math.floor(mainAvailableTime / selectedItems.length / 5) * 5);
+      let remainder = mainAvailableTime - (eachDuration * selectedItems.length);
+
+      const mainDrills = selectedItems.map((item, idx) => {
+        const copy = JSON.parse(JSON.stringify(item));
+        copy.duration = idx === 0 ? (eachDuration + remainder) : eachDuration;
+        return copy;
+      });
+
+      // 8. 組合完成：熱身(25m) + 主項目 + 收操
+      timelineItems = JSON.parse(JSON.stringify([...warmups, ...mainDrills, finalCooldown]));
       renderTimeline();
     }
 
